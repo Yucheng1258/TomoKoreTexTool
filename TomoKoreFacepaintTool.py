@@ -16,11 +16,11 @@ def canvas_2_png(img):
     gob_w, gob_h = 1, 1
     bytes_per_block = 4
     swizzled = nsw_deswizzle(rawdata,(convertSize[0], convertSize[1]),(gob_w, gob_h),bytes_per_block,swizzle_mode)
-    if select == 1:
+    if select == 1 or 3:
         img = Image.frombytes('RGBA',convertSize, swizzled, 'raw', 'RGBA')
     img = img.convert()
     img = gammaedit(img)
-    img.show()
+    #img.show()
     savepath = imagePath.with_name(imagePath.stem + "CanvasOUTPUT.png")
     img.save(savepath,'png')
     print(f'Image file saved to {savepath}')
@@ -78,7 +78,7 @@ def ugctex_2_png(img):
     img = Image.open(io.BytesIO(ddsheader+swizzled))
     img = img.convert()
     img = gammaedit(img)
-    img.show()
+    #img.show()
     savepath = imagePath.with_name(imagePath.stem + "UgcTexOUTPUT.png")
     img.save(savepath,'png')
     print(f'Image file saved to {savepath}')
@@ -142,7 +142,8 @@ while True:
     -------
     1. Canvas/UgcTex to PNG
     2. PNG to Canvas/UgcTex
-    3. Exit
+    3. Batch Convert Canvas/UgcTex to PNG
+    4. Exit
 ''')
     try:
         select = int(input("Select an option: "))
@@ -184,11 +185,25 @@ while True:
                         print("Invalid input...Let's try that again...")
                 except ValueError:
                     print("Invalid input...Let's try that again...")
-        elif select == 3:
+        elif select == 4:
             print('Alright, see ya~')
             break
-        else:
-            print('Invalid input. Please enter a number from 1 to 5.')
+        elif select == 3:
+            direct = Path(input('Enter directiory: '))
+            for f in direct.iterdir():
+                imagePath = f
+                if f.is_file():
+                    with open(f, 'rb') as file:
+                        rawdata = file.read()
+                        if len(rawdata) == 262144:
+                            print('Canvas file detected.')
+                            canvas_2_png(rawdata)
+                        elif len(rawdata) == 131072:
+                            print('UgcTex file detected.')
+                            ugctex_2_png(rawdata)
+                        else:
+                            print(f'Size of {file.name} does not match Canvas nor UgcTex files. Please check your file again.')
+                
     except ValueError as e:
         print(e)
         print('woah man can you input a number please?')
