@@ -6,13 +6,15 @@ try:
 except ImportError as e:
     print(f"An import error occurred: {e}")
 
+SWIZZLE_MODE = 4
 
-def gammaedit(img:Image, gamma = 0.4545):
+
+def gammaedit(img: Image, gamma: int = 0.4545):
     return img.point(lambda x: ((x / 255) ** gamma) * 255)
 
+
 def canvas_2_png(img):
-    swizzle_mode = 4
-    convertSize = (256,256)
+    convert_size  = (256, 256)
     gob_w, gob_h = 1, 1
     bytes_per_block = 4
     swizzled = nsw_deswizzle(rawdata,(convertSize[0], convertSize[1]),(gob_w, gob_h),bytes_per_block,swizzle_mode)
@@ -26,10 +28,12 @@ def canvas_2_png(img):
     print(f'Image file saved to {savepath}')
     return
 
-def png_2_canvas(imagePath, useSrgb = False):
-    imageRes = 0
+
+def png_2_canvas(imagePath, useSrgb=False):
+    image_res = 0
     img = Image.open(imagePath)
-    if img.size != (256,256):
+
+    if img.size != (256, 256):
         while True:
             try:
                 print('''
@@ -40,42 +44,51 @@ def png_2_canvas(imagePath, useSrgb = False):
                     2. Keep aspect ratio and resize
                     3. Cancel
                     ''')
-                imageRes = int(input('Select an option: '))
-                if 0 < imageRes < 4:
+                image_res = int(input('Select an option: '))
+                if 0 < image_res < 4:
                     break
                 else:
                     print('Invalid input. Please provide a number from 1 to 3.')
             except ValueError:
                 print('woah man can you input a number please?')
-    if imageRes != 3:
-        if imageRes == 1:
-            img = img.resize((256,256),1)
-        elif imageRes == 2:
-            img = ImageOps.fit(img,(256,256))
 
-        if not useSrgb:
-            img = gammaedit(img,2.2)
-        img = img.convert('RGBA')
-        convertImg = img.tobytes('raw')
-        savepath = imagePath.with_name(imagePath.stem + "OUTPUT.canvas")
-        gob_w, gob_h = 1, 1
-        bytes_per_block = 4
-        swizzle_mode = 4
-        height, width = 256,256
-        linear = nsw_swizzle(convertImg,(width, height),(gob_w, gob_h),bytes_per_block,swizzle_mode)
-        with open(savepath, 'wb') as f:
-            f.write(bytes(linear))
-        print(f'Canvas file saved to {savepath}. Please note that images with varying transparency may become opaque.')
+    if image_res == 3:
+        return
+
+    if image_res == 1:
+        img = img.resize((256, 256), 1)
+    elif image_res == 2:
+        img = ImageOps.fit(img, (256, 256))
+
+    if not useSrgb:
+        img = gammaedit(img, 2.2)
+
+    img = img.convert('RGBA')
+    convert_img = img.tobytes('raw')
+    save_path = imagePath.with_name(imagePath.stem + "OUTPUT.canvas")
+
+    gob_w, gob_h = 1, 1
+    bytes_per_block = 4
+    height, width = 256, 256
+    linear = nsw_swizzle(convert_img, (width, height), (gob_w, gob_h), bytes_per_block, SWIZZLE_MODE)
+
+    with open(save_path, 'wb') as f:
+        f.write(bytes(linear))
+
+    print(f'Canvas file saved to {save_path}. Please note that images with varying transparency may become opaque.')
+
 
 def ugctex_2_png(img):
-    convertSize = (512,512)
+    convert_size = (512, 512)
     gob_w, gob_h = 4, 4
     bytes_per_block = 8
-    swizzle_mode = 4
+
     with open(Path('DDSHeader.ugctex'), 'rb') as file:
-        ddsheader = file.read()
-    swizzled = nsw_deswizzle(rawdata,convertSize,(gob_w, gob_h),bytes_per_block,swizzle_mode)
-    img = Image.open(io.BytesIO(ddsheader+swizzled))
+        dds_header = file.read()
+
+    swizzled = nsw_deswizzle(raw_data, convert_size, (gob_w, gob_h), bytes_per_block, SWIZZLE_MODE)
+
+    img = Image.open(io.BytesIO(dds_header + swizzled))
     img = img.convert()
     img = gammaedit(img)
     #img.show()
@@ -83,11 +96,12 @@ def ugctex_2_png(img):
     img.save(savepath,'png')
     print(f'Image file saved to {savepath}')
 
-def png_2_ugctex(imagePath, useSrgb = False):
-    imageRes = 0
+def png_2_ugctex(imagePath, useSrgb=False):
+    image_res = 0
     img = Image.open(imagePath)
-    convertSize = (512,512)
-    if img.size != convertSize:
+    convert_size = (512, 512)
+
+    if img.size != convert_size:
         while True:
             try:
                 print('''
@@ -98,36 +112,39 @@ def png_2_ugctex(imagePath, useSrgb = False):
                     2. Keep aspect ratio and resize
                     3. Cancel
                     ''')
-                imageRes = int(input('Select an option: '))
-                if 0 < imageRes < 4:
+                image_res = int(input('Select an option: '))
+                if 0 < image_res < 4:
                     break
                 else:
                     print('Invalid input. Please provide a number from 1 to 3.')
             except ValueError:
                 print('woah man can you input a number please?')
-    if imageRes != 3:
-        if imageRes == 1:
-            img = img.resize(convertSize,1)
-        elif imageRes == 2:
-            img = ImageOps.fit(img,convertSize)
-        if not useSrgb:
+                
+    if image_res != 3:
+        if image_res == 1:
+            img = img.resize(convert_size, 1)
+        elif image_res == 2:
+            img = ImageOps.fit(img, convert_size)
+        if not use_srgb:
             img = gammaedit(img,2.2)
+            
     dds_bytes = io.BytesIO()
-    img.save(dds_bytes,format='DDS',pixel_format='DXT1')
+    img.save(dds_bytes, format='DDS', pixel_format='DXT1')
 
-    savepath = imagePath.with_name(imagePath.stem + "OUTPUT.ugctex")
+    save_path = imagePath.with_name(imagePath.stem + "OUTPUT.ugctex")
     gob_w, gob_h = 4, 4
     bytes_per_block = 8
-    swizzle_mode = 4
-    bSlice = dds_bytes.getvalue()[128:]
-    swizzled = nsw_swizzle(bSlice,convertSize,(gob_w, gob_h),bytes_per_block,swizzle_mode)
-    with open(savepath, 'wb') as f:
+
+    b_slice = dds_bytes.getvalue()[128:]
+    swizzled = nsw_swizzle(b_slice, convert_size, (gob_w, gob_h), bytes_per_block, SWIZZLE_MODE)
+
+    with open(save_path, 'wb') as f:
         f.write(bytes(swizzled))
-    print(f'UgcTex file saved to {savepath}. Please note that images with varying transparency may become opaque.')
+
+    print(f'UgcTex file saved to {save_path}. Please note that images with varying transparency may become opaque.')
 
 
 print('''
-
     Tomodachi Life: Living the Dream
     Facepaint Tool
     By Timimimi
@@ -150,36 +167,37 @@ while True:
         if select == 1:
             imagePath = Path(input(f"Enter Canvas/UgcTex filepath: ").strip())
             with open(imagePath, 'rb') as file:
-                rawdata = file.read()
-                if len(rawdata) == 262144:
+                raw_data = file.read()
+                if len(raw_data) == 262144:
                     print('Canvas file detected.')
-                    canvas_2_png(rawdata)
-                elif len(rawdata) == 131072:
+                    canvas_2_png(raw_data)
+                elif len(raw_data) == 131072:
                     print('UgcTex file detected.')
-                    ugctex_2_png(rawdata)
+                    ugctex_2_png(raw_data)
                 else:
                     print('Size of file does not match Canvas nor UgcTex files. Please check your file again.')
-        elif select ==2:
+        elif select == 2:
             imagePath = Path(input("Enter png filepath: ").strip())
-            useSrgb = False
+            use_srgb = False
             while True:
-                miitopi = input("Is your image ripped from Miitopia? This means it is in sRGB. (Y/N)")
-                if miitopi.upper() == 'Y':
-                    useSrgb = True
+                miitopia_ripped = input("Is your image ripped from Miitopia? This means it is in sRGB. (Y/N)")
+                if miitopia_ripped.upper() == 'Y':
+                    use_srgb = True
                     break
-                elif miitopi.upper() == 'N':
+                elif miitopia_ripped.upper() == 'N':
                     break
                 else:
                     print('Invalid input...Try that again.')
 
             while True:
                 try:
-                    png2type = int(input("What file will you convert this png to?\n1. Canvas\n2. UgcTex\nSelect an option: "))
+                    png2type = int(
+                        input("What file will you convert this png to?\n1. Canvas\n2. UgcTex\nSelect an option: "))
                     if png2type == 1:
-                        png_2_canvas(imagePath,useSrgb)
+                        png_2_canvas(imagePath, use_srgb)
                         break
                     elif png2type == 2:
-                        png_2_ugctex(imagePath,useSrgb)
+                        png_2_ugctex(imagePath, use_srgb)
                         break
                     else:
                         print("Invalid input...Let's try that again...")
