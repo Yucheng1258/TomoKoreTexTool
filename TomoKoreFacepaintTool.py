@@ -17,9 +17,9 @@ def canvas_2_png(img):
     convert_size  = (256, 256)
     gob_w, gob_h = 1, 1
     bytes_per_block = 4
-    swizzled = nsw_deswizzle(rawdata,(convertSize[0], convertSize[1]),(gob_w, gob_h),bytes_per_block,swizzle_mode)
+    swizzled = nsw_deswizzle(rawdata,(convert_size[0], convert_size[1]),(gob_w, gob_h),bytes_per_block,SWIZZLE_MODE)
     if select == 1 or 3:
-        img = Image.frombytes('RGBA',convertSize, swizzled, 'raw', 'RGBA')
+        img = Image.frombytes('RGBA',convert_size, swizzled, 'raw', 'RGBA')
     img = img.convert()
     img = gammaedit(img)
     #img.show()
@@ -86,7 +86,7 @@ def ugctex_2_png(img):
     with open(Path('DDSHeader.ugctex'), 'rb') as file:
         dds_header = file.read()
 
-    swizzled = nsw_deswizzle(raw_data, convert_size, (gob_w, gob_h), bytes_per_block, SWIZZLE_MODE)
+    swizzled = nsw_deswizzle(rawdata, convert_size, (gob_w, gob_h), bytes_per_block, SWIZZLE_MODE)
 
     img = Image.open(io.BytesIO(dds_header + swizzled))
     img = img.convert()
@@ -99,6 +99,7 @@ def ugctex_2_png(img):
 def png_2_ugctex(imagePath, useSrgb=False):
     image_res = 0
     img = Image.open(imagePath)
+    img = img.convert("RGBA")
     convert_size = (512, 512)
 
     if img.size != convert_size:
@@ -127,8 +128,13 @@ def png_2_ugctex(imagePath, useSrgb=False):
             img = ImageOps.fit(img, convert_size)
         if not use_srgb:
             img = gammaedit(img,2.2)
-            
+    
+    alpha = img.getchannel("A")
+    fixalpha = alpha.point(lambda p: 0 if p<255 else 255)
+    img.putalpha(fixalpha)
+
     dds_bytes = io.BytesIO()
+    
     img.save(dds_bytes, format='DDS', pixel_format='DXT1')
 
     save_path = imagePath.with_name(imagePath.stem + "OUTPUT.ugctex")
@@ -160,20 +166,21 @@ while True:
     1. Canvas/UgcTex to PNG
     2. PNG to Canvas/UgcTex
     3. Batch Convert Canvas/UgcTex to PNG
-    4. Exit
+    4. Batch Convert PNG to Canvas and UgcTex
+    5. Exit
 ''')
     try:
         select = int(input("Select an option: "))
         if select == 1:
             imagePath = Path(input(f"Enter Canvas/UgcTex filepath: ").strip())
             with open(imagePath, 'rb') as file:
-                raw_data = file.read()
-                if len(raw_data) == 262144:
+                rawdata = file.read()
+                if len(rawdata) == 262144:
                     print('Canvas file detected.')
-                    canvas_2_png(raw_data)
-                elif len(raw_data) == 131072:
+                    canvas_2_png(rawdata)
+                elif len(rawdata) == 131072:
                     print('UgcTex file detected.')
-                    ugctex_2_png(raw_data)
+                    ugctex_2_png(rawdata)
                 else:
                     print('Size of file does not match Canvas nor UgcTex files. Please check your file again.')
         elif select == 2:
@@ -203,7 +210,7 @@ while True:
                         print("Invalid input...Let's try that again...")
                 except ValueError:
                     print("Invalid input...Let's try that again...")
-        elif select == 4:
+        elif select == 5:
             print('Alright, see ya~')
             break
         elif select == 3:
@@ -221,7 +228,42 @@ while True:
                             ugctex_2_png(rawdata)
                         else:
                             print(f'Size of {file.name} does not match Canvas nor UgcTex files. Please check your file again.')
-                
+        elif select == 4:
+            use_srgb = False
+            while True:
+                miitopia_ripped = input("Are your images ripped from Miitopia? This means it is in sRGB. (Y/N)")
+                if miitopia_ripped.upper() == 'Y':
+                    use_srgb = True
+                    break
+                elif miitopia_ripped.upper() == 'N':
+                    break
+                else:
+                    print('Invalid input...Try that again.')
+
+            while True:
+                try:
+                    png2type = int(
+                        input("What file will you convert these .PNGs to?\n1. Canvas\n2. UgcTex\nSelect an option: "))
+                    if png2type == 1 or 2:
+                        break
+                    else:
+                        print("Invalid input...Let's try that again...")
+                except ValueError:
+                    print("Invalid input...Let's try that again...")
+            
+            direct = Path(input('Enter directiory: '))
+            for f in direct.iterdir():
+                imagePath = f
+                if f.is_file() and f.suffix.upper() == '.PNG':
+                    with open(f, 'rb') as file:
+                        rawdata = file.read()
+                        if png2type == 1:
+                            png_2_canvas(imagePath, use_srgb)
+                            
+                        elif png2type == 2:
+                            png_2_ugctex(imagePath, use_srgb)
+                            
+                        
     except ValueError as e:
         print(e)
         print('woah man can you input a number please?')
