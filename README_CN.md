@@ -7,6 +7,7 @@
 
 本项目基于原作者 Timimimi 的 [TomoKoreFacepaintTool](https://github.com/Timimimi2/TomoKoreTexTool)使用AI进行了改进
 
+免责声明：本软件仅限学习交流使用，禁止商业或者非法用途，否则后果自负
 ## 相比原版的改进
 
 | 方面 | 改进 |
