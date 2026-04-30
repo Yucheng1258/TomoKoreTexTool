@@ -7,6 +7,10 @@ Converts between game texture formats (`.canvas`, `.ugctex`, `_Thumb.ugctex`) an
 
 This project improves using AI upon the original [TomoKoreFacepaintTool](https://github.com/Timimimi2/TomoKoreTexTool) by Timimimi
 
+Disclaimer: 
+This software is for learning and exchange purposes only. 
+It is prohibited to use it for commercial or illegal purposes. 
+Any consequences arising therefrom shall be borne by the user.
 ## Improvements over the original
 
 | Area | Change |
