@@ -460,13 +460,24 @@ def png_conversion_flow(imagePath, useSrgb):
     prefix = ask_image_type()
     while True:
         try:
-            png2type = int(input("要将 PNG 转换为何种格式？(Convert to which format?)\n1. Canvas+UgcTex+Thumb\n2. Canvas\n3. UgcTex\n4. Thumb\n请选择 (Select an option)："))
+            is_facepaint = prefix == 'UgcFacePaint'
+            if is_facepaint:
+                menu_text = ("要将 PNG 转换为何种格式？(Convert to which format?)\n"
+                             "1. Canvas+UgcTex\n2. Canvas\n3. UgcTex\n"
+                             "请选择 (Select an option)：")
+                max_opt = 3
+            else:
+                menu_text = ("要将 PNG 转换为何种格式？(Convert to which format?)\n"
+                             "1. Canvas+UgcTex+Thumb\n2. Canvas\n3. UgcTex\n4. Thumb\n"
+                             "请选择 (Select an option)：")
+                max_opt = 4
+            png2type = int(input(menu_text))
             if png2type == 1:
                 ugc_num = ask_slot_number(prefix)
                 zs_paths = []
                 zs_paths.append(png_2_canvas(imagePath, useSrgb, prefix, ugc_num, skip_save=True))
                 zs_paths.append(png_2_ugctex(imagePath, useSrgb, prefix, ugc_num, skip_save=True))
-                if prefix != 'UgcFacePaint':
+                if not is_facepaint:
                     zs_paths.append(png_2_thumb(imagePath, useSrgb, prefix, ugc_num, skip_save=True))
                 zs_paths = [p for p in zs_paths if p is not None]
                 if zs_paths:
@@ -517,7 +528,7 @@ def png_conversion_flow(imagePath, useSrgb):
             elif png2type == 3:
                 png_2_ugctex(imagePath, useSrgb, prefix)
                 break
-            elif png2type == 4:
+            elif png2type == 4 and max_opt == 4:
                 png_2_thumb(imagePath, useSrgb, prefix)
                 break
             else:
