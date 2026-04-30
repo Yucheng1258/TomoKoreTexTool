@@ -547,7 +547,8 @@ print('''
   免责声明：本软件仅限学习交流使用，禁止商业或者非法用途，否则后果自负
   Disclaimer: 
   This software is for learning and exchange purposes only. 
-  It is prohibited to use it for commercial or illegal purposes. Any consequences arising therefrom shall be borne by the user.
+  It is prohibited to use it for commercial or illegal purposes. 
+  Any consequences arising therefrom shall be borne by the user.
 ''')
 
 while True:
