@@ -104,7 +104,7 @@ Note: back up the original game files before making any changes.
 
 ### Important note
 
-After replacing files and launching the game, a save issue may occur: the game shows "save complete", but the files in the UTC folder are not actually updated. The cause is currently unknown. One workaround is to open Task Manager and restart Windows Explorer, after which the game should save normally.
+After replacing files and launching the game, a save issue may occur: the game shows "save complete", but the files in the Ugc folder are not actually updated. The cause is currently unknown. One workaround is to open Task Manager and restart Windows Explorer, after which the game should save normally.
 
 
 ## License
