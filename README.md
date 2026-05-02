@@ -2,15 +2,11 @@
 
 [中文版本](README_CN.md)
 
-A texture conversion tool for **Tomodachi Life: Living the Dream**   
+A texture conversion tool for **Tomodachi Life: Living the Dream** 
 Converts between game texture formats (`.canvas`, `.ugctex`, `_Thumb.ugctex`) and PNG
 
-This project improves using AI upon the original [TomoKoreFacepaintTool](https://github.com/Timimimi2/TomoKoreTexTool) by Timimimi
+This project improves upon the original [TomoKoreFacepaintTool](https://github.com/Timimimi2/TomoKoreTexTool) by Timimimi
 
-Disclaimer: 
-This software is for learning and exchange purposes only. 
-It is prohibited to use it for commercial or illegal purposes. 
-Any consequences arising therefrom shall be borne by the user.
 ## Improvements over the original
 
 | Area | Change |
@@ -92,19 +88,21 @@ If the PNG doesn't match the target resolution, a prompt appears:
 
 ### Save file location
 
-The game save path is typically:
+The main save path for the game is generally:
 
 ```
 %APPDATA%\..\..\user\save\0000000000000001\0\Ugc
 ```
+The backup save path for the game is generally:
 
-Export the generated files to this path and replace the existing ones for changes to take effect in-game.
+```
+%APPDATA%\..\..\user\save\0000000000000001\1\Ugc
+```
+Export the generated files to these paths and replace the existing ones for changes to take effect in-game.
 
-Note: back up the original game files before making any changes.
+Note: Please back up the original game files before making any changes.
 
-### Important note
 
-After replacing files and launching the game, a save issue may occur: the game shows "save complete", but the files in the Ugc folder are not actually updated. The cause is currently unknown. One workaround is to open Task Manager and restart Windows Explorer, after which the game should save normally.
 
 
 ## License
