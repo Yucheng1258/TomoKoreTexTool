@@ -11,24 +11,26 @@ except ImportError as e:
     print(f"导入错误 (Import error)：{e}")
 
 
-_DEFAULT_SAVE_PATH = r"D:\ryujinx-1.3.269-22.1.0\publish\portable\bis\user\save\0000000000000001\0\Ugc"
+_DEFAULT_SAVE_PATH_1 = r"D:\ryujinx-1.3.269-22.1.0\publish\portable\bis\user\save\0000000000000001\0\Ugc"
+_DEFAULT_SAVE_PATH_2 = r"D:\ryujinx-1.3.269-22.1.0\publish\portable\bis\user\save\0000000000000001\1\Ugc"
 _CONFIG_FILE = Path(__file__).with_name('.tomokore_config.json')
 
 
-def _load_default_path():
+def _load_config():
     try:
         with open(_CONFIG_FILE, 'r') as f:
-            return json.load(f).get('default_save_path', _DEFAULT_SAVE_PATH)
+            cfg = json.load(f)
+            return cfg.get('default_save_path', _DEFAULT_SAVE_PATH_1), cfg.get('default_save_path_2', _DEFAULT_SAVE_PATH_2)
     except (FileNotFoundError, json.JSONDecodeError):
-        return _DEFAULT_SAVE_PATH
+        return _DEFAULT_SAVE_PATH_1, _DEFAULT_SAVE_PATH_2
 
 
-def _save_default_path(path):
+def _save_config():
     with open(_CONFIG_FILE, 'w') as f:
-        json.dump({'default_save_path': path}, f)
+        json.dump({'default_save_path': DEFAULT_SAVE_PATH_1, 'default_save_path_2': DEFAULT_SAVE_PATH_2}, f)
 
 
-DEFAULT_SAVE_PATH = _load_default_path()
+DEFAULT_SAVE_PATH_1, DEFAULT_SAVE_PATH_2 = _load_config()
 
 
 def clean_path(s: str) -> str:
@@ -116,22 +118,26 @@ def compress_to_zs(src_path: Path) -> Path:
 
 def ask_save_location(zs_path: Path, file_label: str):
     """询问用户zs文件的存放位置，返回 True 表示已复制到新位置"""
-    global DEFAULT_SAVE_PATH
+    global DEFAULT_SAVE_PATH_1, DEFAULT_SAVE_PATH_2
     print(f'\n{file_label} 已生成 (Generated)：{zs_path}')
     print(f'请选择 {file_label} 的存放位置 (Choose save location for {file_label})：')
-    print(f'1. 默认路径 (Default path)：{DEFAULT_SAVE_PATH}')
+    print('1. 导出到两个默认地址 (Export to both default paths)')
+    print(f'   默认地址1 (Default path 1)：{DEFAULT_SAVE_PATH_1}')
+    print(f'   默认地址2 (Default path 2)：{DEFAULT_SAVE_PATH_2}')
     print('2. 自定义路径 (Custom path)')
     print('3. 不移动，保留在当前位置 (Keep in current location)')
-    print('4. 修改默认地址 (Modify default path)')
+    print('4. 修改默认地址1 (Modify default path 1)')
+    print('5. 修改默认地址2 (Modify default path 2)')
     while True:
         try:
             choice = int(input('请选择 (Select an option)：'))
             if choice == 1:
-                dest_dir = Path(DEFAULT_SAVE_PATH)
-                dest_dir.mkdir(parents=True, exist_ok=True)
-                dest = dest_dir / zs_path.name
-                shutil.copy2(zs_path, dest)
-                print(f'已复制到 (Copied to)：{dest}')
+                for sp in (DEFAULT_SAVE_PATH_1, DEFAULT_SAVE_PATH_2):
+                    dest_dir = Path(sp)
+                    dest_dir.mkdir(parents=True, exist_ok=True)
+                    dest = dest_dir / zs_path.name
+                    shutil.copy2(zs_path, dest)
+                    print(f'已复制到 (Copied to)：{dest}')
                 return True
             elif choice == 2:
                 custom = clean_path(input('请输入目标文件夹路径 (Enter target folder path)：'))
@@ -145,34 +151,43 @@ def ask_save_location(zs_path: Path, file_label: str):
                 print('文件保留在当前位置 (File kept in current location)。')
                 return False
             elif choice == 4:
-                new_path = clean_path(input('请输入新的默认地址 (Enter new default path)：'))
-                DEFAULT_SAVE_PATH = new_path
-                _save_default_path(new_path)
-                print(f'默认地址已更新为 (Default path updated to)：{DEFAULT_SAVE_PATH}')
+                new_path = clean_path(input('请输入新的默认地址1 (Enter new default path 1)：'))
+                DEFAULT_SAVE_PATH_1 = new_path
+                _save_config()
+                print(f'默认地址1已更新为 (Default path 1 updated to)：{DEFAULT_SAVE_PATH_1}')
+            elif choice == 5:
+                new_path = clean_path(input('请输入新的默认地址2 (Enter new default path 2)：'))
+                DEFAULT_SAVE_PATH_2 = new_path
+                _save_config()
+                print(f'默认地址2已更新为 (Default path 2 updated to)：{DEFAULT_SAVE_PATH_2}')
             else:
-                print('请输入 1、2、3 或 4 (Please enter 1, 2, 3, or 4)。')
+                print('请输入 1、2、3、4 或 5 (Please enter 1, 2, 3, 4, or 5)。')
         except ValueError:
             print('请输入数字 (Please input a number)。')
 
 
 def ask_png_save_location(png_path: Path):
     """询问用户PNG文件的存放位置，返回 True 表示已复制到新位置"""
-    global DEFAULT_SAVE_PATH
+    global DEFAULT_SAVE_PATH_1, DEFAULT_SAVE_PATH_2
     print(f'\nPNG 已生成 (Generated)：{png_path.name}')
     print('请选择 PNG 的存放位置 (Choose save location for PNG)：')
-    print(f'1. 默认路径 (Default path)：{DEFAULT_SAVE_PATH}')
+    print('1. 导出到两个默认地址 (Export to both default paths)')
+    print(f'   默认地址1 (Default path 1)：{DEFAULT_SAVE_PATH_1}')
+    print(f'   默认地址2 (Default path 2)：{DEFAULT_SAVE_PATH_2}')
     print('2. 自定义路径 (Custom path)')
     print('3. 不移动，保留在当前位置 (Keep in current location)')
-    print('4. 修改默认地址 (Modify default path)')
+    print('4. 修改默认地址1 (Modify default path 1)')
+    print('5. 修改默认地址2 (Modify default path 2)')
     while True:
         try:
             choice = int(input('请选择 (Select an option)：'))
             if choice == 1:
-                dest_dir = Path(DEFAULT_SAVE_PATH)
-                dest_dir.mkdir(parents=True, exist_ok=True)
-                dest = dest_dir / png_path.name
-                shutil.copy2(png_path, dest)
-                print(f'已复制到 (Copied to)：{dest}')
+                for sp in (DEFAULT_SAVE_PATH_1, DEFAULT_SAVE_PATH_2):
+                    dest_dir = Path(sp)
+                    dest_dir.mkdir(parents=True, exist_ok=True)
+                    dest = dest_dir / png_path.name
+                    shutil.copy2(png_path, dest)
+                    print(f'已复制到 (Copied to)：{dest}')
                 return True
             elif choice == 2:
                 custom = clean_path(input('请输入目标文件夹路径 (Enter target folder path)：'))
@@ -186,12 +201,17 @@ def ask_png_save_location(png_path: Path):
                 print('文件保留在当前位置 (File kept in current location)。')
                 return False
             elif choice == 4:
-                new_path = clean_path(input('请输入新的默认地址 (Enter new default path)：'))
-                DEFAULT_SAVE_PATH = new_path
-                _save_default_path(new_path)
-                print(f'默认地址已更新为 (Default path updated to)：{DEFAULT_SAVE_PATH}')
+                new_path = clean_path(input('请输入新的默认地址1 (Enter new default path 1)：'))
+                DEFAULT_SAVE_PATH_1 = new_path
+                _save_config()
+                print(f'默认地址1已更新为 (Default path 1 updated to)：{DEFAULT_SAVE_PATH_1}')
+            elif choice == 5:
+                new_path = clean_path(input('请输入新的默认地址2 (Enter new default path 2)：'))
+                DEFAULT_SAVE_PATH_2 = new_path
+                _save_config()
+                print(f'默认地址2已更新为 (Default path 2 updated to)：{DEFAULT_SAVE_PATH_2}')
             else:
-                print('请输入 1、2、3 或 4 (Please enter 1, 2, 3, or 4)。')
+                print('请输入 1、2、3、4 或 5 (Please enter 1, 2, 3, 4, or 5)。')
         except ValueError:
             print('请输入数字 (Please input a number)。')
 
@@ -456,7 +476,7 @@ def png_2_ugctex(imagePath, useSrgb, prefix, ugc_num=None, skip_save=False):
 
 
 def png_conversion_flow(imagePath, useSrgb):
-    global DEFAULT_SAVE_PATH
+    global DEFAULT_SAVE_PATH_1, DEFAULT_SAVE_PATH_2
     prefix = ask_image_type()
     while True:
         try:
@@ -483,20 +503,25 @@ def png_conversion_flow(imagePath, useSrgb):
                 if zs_paths:
                     print(f'\n全部 .zs 文件已生成 (All .zs files generated)')
                     print('请选择存放位置 (Choose save location)：')
-                    print(f'1. 默认路径 (Default path)：{DEFAULT_SAVE_PATH}')
+                    print('1. 导出到两个默认地址 (Export to both default paths)')
+                    print(f'   默认地址1 (Default path 1)：{DEFAULT_SAVE_PATH_1}')
+                    print(f'   默认地址2 (Default path 2)：{DEFAULT_SAVE_PATH_2}')
                     print('2. 自定义路径 (Custom path)')
                     print('3. 不移动，保留在当前位置 (Keep in current location)')
-                    print('4. 修改默认地址 (Modify default path)')
+                    print('4. 修改默认地址1 (Modify default path 1)')
+                    print('5. 修改默认地址2 (Modify default path 2)')
                     while True:
                         try:
                             batch_choice = int(input('请选择 (Select an option)：'))
                             if batch_choice == 1:
-                                dest_dir = Path(DEFAULT_SAVE_PATH)
-                                dest_dir.mkdir(parents=True, exist_ok=True)
+                                for sp in (DEFAULT_SAVE_PATH_1, DEFAULT_SAVE_PATH_2):
+                                    dest_dir = Path(sp)
+                                    dest_dir.mkdir(parents=True, exist_ok=True)
+                                    for p in zs_paths:
+                                        dest = dest_dir / p.name
+                                        shutil.copy2(p, dest)
+                                        print(f'已复制到 (Copied to)：{dest}')
                                 for p in zs_paths:
-                                    dest = dest_dir / p.name
-                                    shutil.copy2(p, dest)
-                                    print(f'已复制到 (Copied to)：{dest}')
                                     p.unlink()
                                 break
                             elif batch_choice == 2:
@@ -513,12 +538,17 @@ def png_conversion_flow(imagePath, useSrgb):
                                 print('文件保留在当前位置 (File kept in current location)。')
                                 break
                             elif batch_choice == 4:
-                                new_path = clean_path(input('请输入新的默认地址 (Enter new default path)：'))
-                                DEFAULT_SAVE_PATH = new_path
-                                _save_default_path(new_path)
-                                print(f'默认地址已更新为 (Default path updated to)：{DEFAULT_SAVE_PATH}')
+                                new_path = clean_path(input('请输入新的默认地址1 (Enter new default path 1)：'))
+                                DEFAULT_SAVE_PATH_1 = new_path
+                                _save_config()
+                                print(f'默认地址1已更新为 (Default path 1 updated to)：{DEFAULT_SAVE_PATH_1}')
+                            elif batch_choice == 5:
+                                new_path = clean_path(input('请输入新的默认地址2 (Enter new default path 2)：'))
+                                DEFAULT_SAVE_PATH_2 = new_path
+                                _save_config()
+                                print(f'默认地址2已更新为 (Default path 2 updated to)：{DEFAULT_SAVE_PATH_2}')
                             else:
-                                print('请输入 1、2、3 或 4 (Please enter 1, 2, 3, or 4)。')
+                                print('请输入 1、2、3、4 或 5 (Please enter 1, 2, 3, 4, or 5)。')
                         except ValueError:
                             print('请输入数字 (Please input a number)。')
                 break
@@ -543,12 +573,12 @@ print('''
   Tomodachi Life: Living the Dream  Texture Converter
 
   原作者 / Original: Timimimi  ·  改进 / Mods: Yucheng1258
-
+      
   免责声明：本软件仅限学习交流使用，禁止商业或者非法用途，否则后果自负
   Disclaimer: 
   This software is for learning and exchange purposes only. 
   It is prohibited to use it for commercial or illegal purposes. 
-  Any consequences arising therefrom shall be borne by the user.
+  Any consequences arising therefrom shall be borne by the user.    
 ''')
 
 while True:
