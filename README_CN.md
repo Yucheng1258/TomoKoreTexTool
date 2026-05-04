@@ -5,7 +5,7 @@
 **朋友收集：梦想生活**（Tomodachi Life: Living the Dream）的纹理转换工具  
 在游戏纹理格式（`.canvas`、`.ugctex`、`_Thumb.ugctex`）与 PNG 之间互转
 
-本项目基于原作者 Timimimi 的 [TomoKoreFacepaintTool](https://github.com/Timimimi2/TomoKoreTexTool)使用AI进行了改进
+本项目基于原作者 Timimimi 的 [TomoKoreFacepaintTool](https://github.com/Timiimiimii/TomoKoreFacepaintTool)使用AI进行了改进
 
 免责声明：本软件仅限学习交流使用，禁止商业或者非法用途，否则后果自负
 ## 相比原版的改进
@@ -110,7 +110,7 @@ python TomoKoreTexTool.py
 
 ## 许可证
 
-本项目沿用原作者的许可证。详见[原始仓库](https://github.com/Timimimi2/TomoKoreTexTool)。
+本项目沿用原作者的许可证。详见[原始仓库](https://github.com/Timiimiimii/TomoKoreFacepaintTool)。
 
 ## 鸣谢
 
