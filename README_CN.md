@@ -67,7 +67,7 @@ python TomoKoreTexTool.py
 ### 选项 2：PNG → 游戏格式
 
 1. 输入 PNG 文件路径
-2. 选择图片类型：面部彩绘 / 食物 / 物品
+2. 选择图片类型：面部彩绘 / 食物 / 宝物
 3. 选择输出格式：
    - **Canvas+UgcTex+Thumb** — 一次性输出全部三种格式
    - **Canvas** — 仅 `.canvas`（256×256，RGBA8）
