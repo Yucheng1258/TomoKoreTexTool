@@ -6,14 +6,16 @@ try:
     import json
     import struct
     import shutil
+    import sys
     import zstandard as zstd
 except ImportError as e:
     print(f"导入错误 (Import error)：{e}")
 
 
-_DEFAULT_SAVE_PATH_1 = r"D:\ryujinx-1.3.269-22.1.0\publish\portable\bis\user\save\0000000000000001\0\Ugc"
-_DEFAULT_SAVE_PATH_2 = r"D:\ryujinx-1.3.269-22.1.0\publish\portable\bis\user\save\0000000000000001\1\Ugc"
-_CONFIG_FILE = Path(__file__).with_name('.tomokore_config.json')
+_DEFAULT_SAVE_PATH_1 = r"D:\ryujinx-canary-1.3.287-win_x64\publish\portable\bis\user\save\0000000000000001\0\Ugc"
+_DEFAULT_SAVE_PATH_2 = r"D:\ryujinx-canary-1.3.287-win_x64\publish\portable\bis\user\save\0000000000000001\1\Ugc"
+_APP_DIR = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).parent
+_CONFIG_FILE = _APP_DIR / '.tomokore_config.json'
 
 
 def _load_config():
@@ -78,7 +80,7 @@ def ask_image_type():
             print('\n请选择图片类型 (Select image type)：')
             print('1. 面部彩绘 (UgcFacePaint)')
             print('2. 食物 (UgcFood)')
-            print('3. 物品 (UgcGoods)')
+            print('3. 宝物 (UgcGoods)')
             choice = int(input('请选择 (Select an option)：'))
             if choice == 1:
                 return 'UgcFacePaint'
@@ -93,10 +95,10 @@ def ask_image_type():
 
 
 def ask_slot_number(prefix):
-    """询问用户槽位编号"""
+    """询问用户文件编号"""
     while True:
         try:
-            num = int(input(f'\n请输入槽位编号（0={prefix}000, 1={prefix}001, and so on / 以此类推）：'))
+            num = int(input(f'\n请输入文件编号（0={prefix}000, 1={prefix}001, and so on / 以此类推）：'))
             if num < 0:
                 print('请输入0或以上的数字 (Please enter 0 or above)。')
             else:
@@ -226,6 +228,7 @@ def thumb_2_png(rawdata, imagePath):
     swizzled = nsw_deswizzle(rawdata, block_grid, (gob_w, gob_h), bytes_per_block, swizzle_mode)
     dds = make_dds_header(convertSize[0], convertSize[1], 'DXT5') + bytes(swizzled)
     img = Image.open(io.BytesIO(dds)).convert('RGBA')
+    img = gammaedit(img, 0.4545)
     savepath = imagePath.with_name(_clean_output_name(imagePath, '_OUTPUT.png'))
     img.save(savepath, 'png')
     print(f'图片已保存至 (Image saved to)：{savepath}')
@@ -309,6 +312,7 @@ def canvas_2_png(img):
     swizzled = nsw_deswizzle(rawdata, (convertSize[0], convertSize[1]), (gob_w, gob_h), bytes_per_block, swizzle_mode)
     if select == 1:
         img = Image.frombytes('RGBA', convertSize, swizzled, 'raw', 'RGBA')
+    img = gammaedit(img, 0.4545)
     img = img.convert()
     savepath = imagePath.with_name(_clean_output_name(imagePath, 'CanvasOUTPUT.png'))
     img.save(savepath, 'png')
@@ -401,6 +405,7 @@ def ugctex_2_png(img):
     ddsheader = make_dds_header(pixel_w, pixel_h, 'DXT1')
     swizzled = nsw_deswizzle(rawdata, convertSize, (1, 1), bytes_per_block, swizzle_mode)
     img = Image.open(io.BytesIO(ddsheader + swizzled))
+    img = gammaedit(img, 0.4545)
     img = img.convert()
     savepath = imagePath.with_name(_clean_output_name(imagePath, 'UgcTexOUTPUT.png'))
     img.save(savepath, 'png')
