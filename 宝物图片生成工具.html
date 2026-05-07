@@ -100,7 +100,7 @@
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 0;
     }
     .badge {
       display: inline-flex;
@@ -115,6 +115,25 @@
       border-radius: 20px;
       letter-spacing: 0.05em;
       text-transform: uppercase;
+    }
+
+    .mode-toggle {
+      background: var(--surface2);
+      border: 1px solid rgba(76, 110, 245, 0.28);
+      color: var(--accent);
+      padding: 10px 22px;
+      min-height: 44px;
+      border-radius: 999px;
+      font-size: 0.96rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      box-shadow: 0 2px 8px rgba(76, 110, 245, 0.08);
+    }
+    .mode-toggle:hover {
+      background: rgba(76, 110, 245, 0.08);
+      border-color: rgba(76, 110, 245, 0.55);
+      color: var(--accent-light);
+      transform: translateY(-1px);
     }
 
     .main-layout {
@@ -209,6 +228,10 @@
     .checkerboard-bg.edit-bg.dragging {
       outline-color: var(--accent);
       box-shadow: 0 0 0 6px var(--accent-glow);
+    }
+    .checkerboard-bg.edit-bg.empty-clickable,
+    .canvas-wrapper.edit-wrapper.empty-clickable {
+      cursor: pointer;
     }
 
     .canvas-wrapper {
@@ -330,6 +353,22 @@
     .move-btn-up { top: 13px; }
     .move-btn-down { bottom: 13px; }
     .move-btn svg { width: 17px; height: 17px; }
+
+    .move-btn.side-btn {
+      top: 50%;
+      bottom: auto;
+      width: 30px;
+      height: 46px;
+      transform: translateY(-50%) scale(0.96);
+    }
+    .move-btn.side-btn.show {
+      transform: translateY(-50%) scale(1);
+    }
+    .move-btn.side-btn:active {
+      transform: translateY(-50%) scale(0.94);
+    }
+    .move-btn-left { left: 4px; right: auto; }
+    .move-btn-right { left: auto; right: 4px; }
 
     .btn-primary {
       background: var(--accent);
@@ -535,7 +574,8 @@
       .main-layout { flex-direction: column; align-items: center; gap: 16px; }
       .panel-card { width: min(316px, 100%); }
       .app-container { padding: 24px 16px 20px; }
-      .header-badge { display: none; }
+      .app-header { flex-wrap: wrap; }
+      .header-badge { margin-left: 56px; }
     }
     @media (max-width: 480px) {
       .panel-card { width: 100%; padding: 14px; }
@@ -557,11 +597,11 @@
       </svg>
     </div>
     <div class="header-text">
-      <h1>《朋友收集梦想生活》宝物-游戏图片生成工具</h1>
+      <h1 id="toolTitle">《朋友收集梦想生活》宝物-游戏/影视图片生成工具</h1>
       <p class="subtitle">导入图片 → 调整显示区域 → 导出 256×256 透明边框 PNG</p>
     </div>
     <div class="header-badge">
-      <span class="badge">PNG · 256×256</span>
+      <button class="btn mode-toggle" id="btnModeToggle" type="button">切换为宝物-书</button>
     </div>
   </div>
 
@@ -572,7 +612,7 @@
       <div class="panel-header">
         <span class="panel-dot edit"></span>
         <span class="panel-title">编辑区域</span>
-        <span class="panel-hint">256 × 256 · 中间 144px 可编辑</span>
+        <span class="panel-hint" id="editPanelHint">256 × 256 · 中间 144px 可编辑</span>
       </div>
 
       <div class="checkerboard-bg edit-bg" id="editCheckerboard">
@@ -643,7 +683,7 @@
       <div class="panel-header">
         <span class="panel-dot preview"></span>
         <span class="panel-title">导出预览</span>
-        <span class="panel-hint">256 × 256 · 上下 56/56px 透明</span>
+        <span class="panel-hint" id="previewPanelHint">256 × 256 · 上下 56/56px 透明</span>
       </div>
 
       <div class="checkerboard-bg" id="previewCheckerboard">
@@ -706,7 +746,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
     </svg>
-    拖放图片 · 滚轮缩放 · 拖拽平移 · 上/下按钮微调 · 粘贴
+    <span id="bottomHintText">拖放图片 · 滚轮缩放 · 拖拽平移 · 上/下按钮微调 · 粘贴</span>
     <span class="kbd">Ctrl+S</span> 导出
   </div>
 </div>
@@ -724,6 +764,12 @@
     const noImagePlaceholder = document.getElementById('noImagePlaceholder');
     const btnMoveUp = document.getElementById('btnMoveUp');
     const btnMoveDown = document.getElementById('btnMoveDown');
+    const btnModeToggle = document.getElementById('btnModeToggle');
+    const toolTitle = document.getElementById('toolTitle');
+    const editPanelHint = document.getElementById('editPanelHint');
+    const previewPanelHint = document.getElementById('previewPanelHint');
+    const modeBadge = document.getElementById('modeBadge');
+    const bottomHintText = document.getElementById('bottomHintText');
     const fileInput = document.getElementById('fileInput');
     const zoomSlider = document.getElementById('zoomSlider');
     const zoomDisplay = document.getElementById('zoomDisplay');
@@ -735,6 +781,7 @@
     let isDragging = false;
     let dragStartX = 0, dragStartY = 0, dragStartTx = 0, dragStartTy = 0;
     let hasImage = false;
+    let currentMode = 'game';
 
     // ── 滤镜状态 ──
     let filterBrightness = 100, filterContrast = 100, filterSaturation = 100;
@@ -744,10 +791,53 @@
     }
 
     const CANVAS_SIZE = 256;
-    const CONTENT_Y_START = 56;
-    const CONTENT_Y_END = 200;
-    const CONTENT_W = 256;
-    const CONTENT_H = 144;
+    const MODE_CONFIGS = {
+      game: {
+        key: 'game',
+        itemName: '宝物-游戏',
+        nextLabel: '切换为宝物-书',
+        title: '《朋友收集梦想生活》宝物-游戏/影视图片生成工具',
+        editHint: '256 × 256 · 中间 144px 可编辑',
+        previewHint: '256 × 256 · 上下 56/56px 透明',
+        bottomHint: '拖放图片 · 滚轮缩放 · 拖拽平移 · 上/下按钮微调 · 粘贴',
+        x: 0,
+        y: 56,
+        w: 256,
+        h: 144,
+        axis: 'vertical',
+        filePrefix: 'treasure-game'
+      },
+      book: {
+        key: 'book',
+        itemName: '宝物-书',
+        nextLabel: '切换为宝物-游戏',
+        title: '《朋友收集梦想生活》宝物-书图片生成工具',
+        editHint: '256 × 256 · 中间 180px 可编辑',
+        previewHint: '256 × 256 · 左右 38/38px 透明',
+        bottomHint: '拖放图片 · 滚轮缩放 · 拖拽平移 · 左/右按钮微调 · 粘贴',
+        x: 38,
+        y: 0,
+        w: 180,
+        h: 256,
+        axis: 'horizontal',
+        filePrefix: 'treasure-book'
+      }
+    };
+
+    function cfg() { return MODE_CONFIGS[currentMode]; }
+
+    function upIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+    }
+    function downIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+    }
+    function leftIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
+    }
+    function rightIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+    }
 
     // ── Toast ──
     let toastTimer;
@@ -758,40 +848,55 @@
       toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
+    function drawGuideLines(ctx, color) {
+      const c = cfg();
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.setLineDash([6, 4]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (c.y > 0) {
+        ctx.moveTo(0, c.y);
+        ctx.lineTo(CANVAS_SIZE, c.y);
+        ctx.moveTo(0, c.y + c.h);
+        ctx.lineTo(CANVAS_SIZE, c.y + c.h);
+      }
+      if (c.x > 0) {
+        ctx.moveTo(c.x, 0);
+        ctx.lineTo(c.x, CANVAS_SIZE);
+        ctx.moveTo(c.x + c.w, 0);
+        ctx.lineTo(c.x + c.w, CANVAS_SIZE);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // ── 绘制编辑画布 ──
     function drawEditCanvas() {
+      const c = cfg();
       editCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
       if (!currentImage || !hasImage) return;
 
       editCtx.save();
-      // 裁剪到内容区域
+      // 裁剪到当前模式的内容区域
       editCtx.beginPath();
-      editCtx.rect(0, CONTENT_Y_START, CONTENT_W, CONTENT_H);
+      editCtx.rect(c.x, c.y, c.w, c.h);
       editCtx.clip();
 
       editCtx.imageSmoothingEnabled = true;
       editCtx.imageSmoothingQuality = 'high';
       const drawW = currentImage.naturalWidth * scale;
       const drawH = currentImage.naturalHeight * scale;
-      editCtx.drawImage(currentImage, tx, CONTENT_Y_START + ty, drawW, drawH);
+      editCtx.drawImage(currentImage, c.x + tx, c.y + ty, drawW, drawH);
       editCtx.restore();
 
       // 内容区边界参考线
-      editCtx.save();
-      editCtx.strokeStyle = 'rgba(129, 140, 248, 0.25)';
-      editCtx.setLineDash([6, 4]);
-      editCtx.lineWidth = 1;
-      editCtx.beginPath();
-      editCtx.moveTo(0, CONTENT_Y_START);
-      editCtx.lineTo(CANVAS_SIZE, CONTENT_Y_START);
-      editCtx.moveTo(0, CONTENT_Y_END);
-      editCtx.lineTo(CANVAS_SIZE, CONTENT_Y_END);
-      editCtx.stroke();
-      editCtx.restore();
+      drawGuideLines(editCtx, 'rgba(129, 140, 248, 0.25)');
     }
 
     // ── 绘制预览画布 ──
     function drawPreviewCanvas() {
+      const c = cfg();
       previewCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
       if (!hasImage) return;
 
@@ -801,7 +906,7 @@
       const offCtx = off.getContext('2d');
       offCtx.imageSmoothingEnabled = true;
       offCtx.imageSmoothingQuality = 'high';
-      offCtx.drawImage(editCanvas, 0, CONTENT_Y_START, CONTENT_W, CONTENT_H, 0, CONTENT_Y_START, CONTENT_W, CONTENT_H);
+      offCtx.drawImage(editCanvas, c.x, c.y, c.w, c.h, c.x, c.y, c.w, c.h);
 
       previewCtx.save();
       previewCtx.filter = getFilterString();
@@ -809,17 +914,7 @@
       previewCtx.restore();
 
       // 边界参考线（无滤镜）
-      previewCtx.save();
-      previewCtx.strokeStyle = 'rgba(34, 160, 107, 0.18)';
-      previewCtx.setLineDash([4, 4]);
-      previewCtx.lineWidth = 1;
-      previewCtx.beginPath();
-      previewCtx.moveTo(0, CONTENT_Y_START);
-      previewCtx.lineTo(CANVAS_SIZE, CONTENT_Y_START);
-      previewCtx.moveTo(0, CONTENT_Y_END);
-      previewCtx.lineTo(CANVAS_SIZE, CONTENT_Y_END);
-      previewCtx.stroke();
-      previewCtx.restore();
+      drawGuideLines(previewCtx, 'rgba(34, 160, 107, 0.18)');
     }
 
     function updateAllCanvases() {
@@ -832,33 +927,94 @@
       noImagePlaceholder.style.display = hasImage ? 'none' : 'flex';
       btnMoveUp.classList.toggle('show', hasImage);
       btnMoveDown.classList.toggle('show', hasImage);
+      editCheckerboard.classList.toggle('empty-clickable', !hasImage);
+      editWrapper.classList.toggle('empty-clickable', !hasImage);
     }
 
-    // ── 上下移动工具 ──
-    function moveImageY(delta) {
+    function refreshModeUI() {
+      const c = cfg();
+      toolTitle.textContent = c.title;
+      editPanelHint.textContent = c.editHint;
+      previewPanelHint.textContent = c.previewHint;
+      if (modeBadge) modeBadge.textContent = 'PNG · 256×256';
+      btnModeToggle.textContent = c.nextLabel;
+      btnModeToggle.setAttribute('aria-label', c.nextLabel);
+      bottomHintText.textContent = c.bottomHint;
+
+      btnMoveUp.classList.remove('move-btn-up', 'move-btn-down', 'side-btn', 'move-btn-left', 'move-btn-right');
+      btnMoveDown.classList.remove('move-btn-up', 'move-btn-down', 'side-btn', 'move-btn-left', 'move-btn-right');
+
+      if (c.axis === 'vertical') {
+        btnMoveUp.classList.add('move-btn-up');
+        btnMoveDown.classList.add('move-btn-down');
+        btnMoveUp.innerHTML = upIcon();
+        btnMoveDown.innerHTML = downIcon();
+        btnMoveUp.title = '图片向上移动';
+        btnMoveDown.title = '图片向下移动';
+        btnMoveUp.setAttribute('aria-label', '图片向上移动');
+        btnMoveDown.setAttribute('aria-label', '图片向下移动');
+      } else {
+        btnMoveUp.classList.add('side-btn', 'move-btn-left');
+        btnMoveDown.classList.add('side-btn', 'move-btn-right');
+        btnMoveUp.innerHTML = leftIcon();
+        btnMoveDown.innerHTML = rightIcon();
+        btnMoveUp.title = '图片向左移动';
+        btnMoveDown.title = '图片向右移动';
+        btnMoveUp.setAttribute('aria-label', '图片向左移动');
+        btnMoveDown.setAttribute('aria-label', '图片向右移动');
+      }
+      updatePlaceholderVisibility();
+    }
+
+    function switchMode() {
+      currentMode = currentMode === 'game' ? 'book' : 'game';
+      refreshModeUI();
+      if (currentImage && hasImage) {
+        fitScale = calculateFitScale(currentImage.naturalWidth, currentImage.naturalHeight);
+        fillScale = calculateFillScale(currentImage.naturalWidth, currentImage.naturalHeight);
+        scale = fitScale;
+        centerImage(currentImage.naturalWidth, currentImage.naturalHeight, scale);
+        clampOffsets();
+        updateZoomUI();
+      }
+      updateAllCanvases();
+      showToast(`已切换为${cfg().itemName}`);
+    }
+
+    // ── 移动工具 ──
+    function moveImageBy(sign, step) {
       if (!currentImage || !hasImage) return;
-      ty += delta;
+      if (cfg().axis === 'vertical') ty += sign * step;
+      else tx += sign * step;
       clampOffsets();
       updateAllCanvases();
     }
 
     // ── 缩放工具 ──
-    function calculateFitScale(w, h) { return Math.min(CONTENT_W / w, CONTENT_H / h); }
-    function calculateFillScale(w, h) { return Math.max(CONTENT_W / w, CONTENT_H / h); }
+    function calculateFitScale(w, h) {
+      const c = cfg();
+      return Math.min(c.w / w, c.h / h);
+    }
+    function calculateFillScale(w, h) {
+      const c = cfg();
+      return Math.max(c.w / w, c.h / h);
+    }
 
     function centerImage(w, h, s) {
-      tx = (CONTENT_W - w * s) / 2;
-      ty = (CONTENT_H - h * s) / 2;
+      const c = cfg();
+      tx = (c.w - w * s) / 2;
+      ty = (c.h - h * s) / 2;
     }
 
     function clampOffsets() {
       if (!currentImage || !hasImage) return;
+      const c = cfg();
       const drawW = currentImage.naturalWidth * scale;
       const drawH = currentImage.naturalHeight * scale;
       const m = 0.1;
-      if (drawW > CONTENT_W * 0.3 && drawH > CONTENT_H * 0.3) {
-        tx = Math.max(-(drawW * (1 - m)), Math.min(CONTENT_W - drawW * m, tx));
-        ty = Math.max(-(drawH * (1 - m)), Math.min(CONTENT_H - drawH * m, ty));
+      if (drawW > c.w * 0.3 && drawH > c.h * 0.3) {
+        tx = Math.max(-(drawW * (1 - m)), Math.min(c.w - drawW * m, tx));
+        ty = Math.max(-(drawH * (1 - m)), Math.min(c.h - drawH * m, ty));
       }
     }
 
@@ -880,8 +1036,9 @@
     }
 
     function syncZoomFromSlider() {
+      const c = cfg();
       const ns = parseInt(zoomSlider.value) / 100;
-      if (Math.abs(ns - scale) > 0.001) updateScale(ns, CONTENT_W / 2, CONTENT_H / 2);
+      if (Math.abs(ns - scale) > 0.001) updateScale(ns, c.w / 2, c.h / 2);
     }
 
     // ── 图片加载 ──
@@ -923,49 +1080,60 @@
     // ── 导出 ──
     function exportPNG() {
       if (!hasImage) { showToast('请先导入一张图片'); return; }
+      const c = cfg();
       const ec = document.createElement('canvas');
       ec.width = CANVAS_SIZE; ec.height = CANVAS_SIZE;
       const ectx = ec.getContext('2d');
       ectx.imageSmoothingEnabled = true;
       ectx.imageSmoothingQuality = 'high';
-      // 先完整绘制图像（含滤镜），再用 clearRect 硬清除上下透明区域
+      // 先完整绘制图像（含滤镜），再用 clearRect 硬清除透明区域
       // 避免 clip() 抗锯齿导致边界出现半透明条纹
       ectx.filter = getFilterString();
       const drawW = currentImage.naturalWidth * scale;
       const drawH = currentImage.naturalHeight * scale;
-      ectx.drawImage(currentImage, tx, CONTENT_Y_START + ty, drawW, drawH);
+      ectx.drawImage(currentImage, c.x + tx, c.y + ty, drawW, drawH);
       ectx.filter = 'none';
-      // 硬清除上下透明边框区域，像素完全归零，不留任何渗色
-      ectx.clearRect(0, 0, CANVAS_SIZE, CONTENT_Y_START);
-      ectx.clearRect(0, CONTENT_Y_END, CANVAS_SIZE, CANVAS_SIZE - CONTENT_Y_END);
+
+      // 硬清除透明边框区域，像素完全归零，不留任何渗色
+      if (c.y > 0) {
+        ectx.clearRect(0, 0, CANVAS_SIZE, c.y);
+        ectx.clearRect(0, c.y + c.h, CANVAS_SIZE, CANVAS_SIZE - (c.y + c.h));
+      }
+      if (c.x > 0) {
+        ectx.clearRect(0, 0, c.x, CANVAS_SIZE);
+        ectx.clearRect(c.x + c.w, 0, CANVAS_SIZE - (c.x + c.w), CANVAS_SIZE);
+      }
+
       ec.toBlob(blob => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `export-${new Date().toISOString().replace(/[:.]/g, '-').slice(0,19)}.png`;
+        a.download = `${c.filePrefix}-${new Date().toISOString().replace(/[:.]/g, '-').slice(0,19)}.png`;
         document.body.appendChild(a); a.click();
         document.body.removeChild(a); URL.revokeObjectURL(url);
-        showToast('PNG 已导出 (256×256)');
+        showToast(`PNG 已导出 (${c.itemName} · 256×256)`);
       }, 'image/png');
     }
 
     // ── 鼠标坐标 → 内容区逻辑坐标 ──
     function getPos(e) {
+      const c = cfg();
       const r = editCanvas.getBoundingClientRect();
       // 画布坐标
       const canvasX = (e.clientX - r.left) * CANVAS_SIZE / r.width;
       const canvasY = (e.clientY - r.top) * CANVAS_SIZE / r.height;
       // 转换为内容区相对坐标
-      return { x: canvasX, y: canvasY - CONTENT_Y_START };
+      return { x: canvasX - c.x, y: canvasY - c.y };
     }
 
     // ── 鼠标交互 ──
     editCanvas.addEventListener('mousedown', e => {
       if (!hasImage || e.button !== 0) return;
       e.preventDefault();
+      const c = cfg();
       const p = getPos(e);
       // 只在内容区内拖拽
-      if (p.y < 0 || p.y > CONTENT_H) return;
+      if (p.x < 0 || p.x > c.w || p.y < 0 || p.y > c.h) return;
       isDragging = true;
       dragStartX = p.x; dragStartY = p.y;
       dragStartTx = tx; dragStartTy = ty;
@@ -996,8 +1164,14 @@
     }, { passive: false });
 
     zoomSlider.addEventListener('input', syncZoomFromSlider);
-    document.getElementById('btnZoomIn').addEventListener('click', () => { if (hasImage) updateScale(scale + 0.01, CONTENT_W/2, CONTENT_H/2); });
-    document.getElementById('btnZoomOut').addEventListener('click', () => { if (hasImage) updateScale(scale - 0.01, CONTENT_W/2, CONTENT_H/2); });
+    document.getElementById('btnZoomIn').addEventListener('click', () => {
+      const c = cfg();
+      if (hasImage) updateScale(scale + 0.01, c.w/2, c.h/2);
+    });
+    document.getElementById('btnZoomOut').addEventListener('click', () => {
+      const c = cfg();
+      if (hasImage) updateScale(scale - 0.01, c.w/2, c.h/2);
+    });
     document.getElementById('btnFit').addEventListener('click', () => {
       if (!hasImage || !currentImage) return;
       scale = fitScale; centerImage(currentImage.naturalWidth, currentImage.naturalHeight, scale);
@@ -1009,7 +1183,8 @@
       clampOffsets(); updateAllCanvases(); updateZoomUI();
     });
     document.getElementById('btnActualSize').addEventListener('click', () => {
-      if (hasImage) updateScale(1, CONTENT_W/2, CONTENT_H/2);
+      const c = cfg();
+      if (hasImage) updateScale(1, c.w/2, c.h/2);
     });
     document.getElementById('btnReset').addEventListener('click', () => {
       if (!hasImage || !currentImage) return;
@@ -1017,7 +1192,7 @@
       clampOffsets(); updateAllCanvases(); updateZoomUI();
     });
 
-    function bindVerticalMoveButton(button, direction) {
+    function bindMoveButton(button, sign) {
       let holdTimer = null;
       let repeatTimer = null;
       const clearTimers = () => {
@@ -1031,10 +1206,10 @@
         e.preventDefault();
         e.stopPropagation();
         const step = e.shiftKey ? 10 : 1;
-        moveImageY(direction * step);
+        moveImageBy(sign, step);
         clearTimers();
         holdTimer = setTimeout(() => {
-          repeatTimer = setInterval(() => moveImageY(direction * step), 45);
+          repeatTimer = setInterval(() => moveImageBy(sign, step), 45);
         }, 260);
       };
       button.addEventListener('pointerdown', startMove);
@@ -1046,11 +1221,18 @@
         e.stopPropagation();
       });
     }
-    bindVerticalMoveButton(btnMoveUp, -1);
-    bindVerticalMoveButton(btnMoveDown, 1);
+    bindMoveButton(btnMoveUp, -1);
+    bindMoveButton(btnMoveDown, 1);
 
+    btnModeToggle.addEventListener('click', switchMode);
     document.getElementById('btnExport').addEventListener('click', exportPNG);
     document.getElementById('btnImport').addEventListener('click', () => fileInput.click());
+    editCheckerboard.addEventListener('click', e => {
+      // 未导入图片前，点击编辑区域的网格即可导入；已有图片后只保留下方按钮导入新图
+      if (hasImage) return;
+      e.preventDefault();
+      fileInput.click();
+    });
     fileInput.addEventListener('change', () => {
       if (fileInput.files?.length > 0) { loadImageFromFile(fileInput.files[0]); fileInput.value = ''; }
     });
@@ -1101,14 +1283,15 @@
     document.addEventListener('keydown', e => {
       if (['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) return;
       if (!hasImage) return;
+      const c = cfg();
       const step = e.shiftKey ? 10 : 1;
       switch (e.key.toLowerCase()) {
         case 'arrowleft':  e.preventDefault(); tx -= step; clampOffsets(); updateAllCanvases(); break;
         case 'arrowright': e.preventDefault(); tx += step; clampOffsets(); updateAllCanvases(); break;
         case 'arrowup':    e.preventDefault(); ty -= step; clampOffsets(); updateAllCanvases(); break;
         case 'arrowdown':  e.preventDefault(); ty += step; clampOffsets(); updateAllCanvases(); break;
-        case '+': case '=': e.preventDefault(); updateScale(scale + 0.01, CONTENT_W/2, CONTENT_H/2); break;
-        case '-': e.preventDefault(); updateScale(scale - 0.01, CONTENT_W/2, CONTENT_H/2); break;
+        case '+': case '=': e.preventDefault(); updateScale(scale + 0.01, c.w/2, c.h/2); break;
+        case '-': e.preventDefault(); updateScale(scale - 0.01, c.w/2, c.h/2); break;
         case '0':
         case 'f': e.preventDefault(); if (currentImage && !e.ctrlKey && !e.metaKey) { scale = fitScale; centerImage(currentImage.naturalWidth, currentImage.naturalHeight, scale); clampOffsets(); updateAllCanvases(); updateZoomUI(); } break;
         case 's': if (e.ctrlKey || e.metaKey) { e.preventDefault(); exportPNG(); } break;
@@ -1121,8 +1304,10 @@
 
     editCanvas.addEventListener('touchstart', e => {
       if (!hasImage) return;
+      const c = cfg();
       if (e.touches.length === 1) {
         const p = getPos(e.touches[0]);
+        if (p.x < 0 || p.x > c.w || p.y < 0 || p.y > c.h) return;
         dragStartX = p.x; dragStartY = p.y; dragStartTx = tx; dragStartTy = ty;
         isDragging = true; isPinching = false; editWrapper.classList.add('dragging'); editCheckerboard.classList.add('dragging');
       } else if (e.touches.length === 2) {
@@ -1140,6 +1325,7 @@
 
     editCanvas.addEventListener('touchmove', e => {
       if (!hasImage) return;
+      const c = cfg();
       if (isPinching && e.touches.length === 2) {
         e.preventDefault();
         const t1 = e.touches[0], t2 = e.touches[1];
@@ -1149,10 +1335,10 @@
         const rect = editCanvas.getBoundingClientRect();
         const sX = CANVAS_SIZE / rect.width, sY = CANVAS_SIZE / rect.height;
         // 中点在画布上的位置 → 内容区坐标
-        const slX = ((touchStartMidX - rect.left) * sX);
-        const slY = ((touchStartMidY - rect.top) * sY) - CONTENT_Y_START;
-        const nlX = ((newMidX - rect.left) * sX);
-        const nlY = ((newMidY - rect.top) * sY) - CONTENT_Y_START;
+        const slX = ((touchStartMidX - rect.left) * sX) - c.x;
+        const slY = ((touchStartMidY - rect.top) * sY) - c.y;
+        const nlX = ((newMidX - rect.left) * sX) - c.x;
+        const nlY = ((newMidY - rect.top) * sY) - c.y;
         const oldScale = scale;
         scale = Math.max(0.05, Math.min(20, newScale));
         if (oldScale > 0) {
@@ -1213,6 +1399,7 @@
     });
 
     // ── 初始化 ──
+    refreshModeUI();
     updatePlaceholderVisibility();
     updateZoomUI();
     zoomSlider.value = 100;
