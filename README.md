@@ -5,7 +5,7 @@
 A texture conversion tool for **Tomodachi Life: Living the Dream** 
 Converts between game texture formats (`.canvas`, `.ugctex`, `_Thumb.ugctex`) and PNG
 
-This project improves upon the original [TomoKoreFacepaintTool](https://github.com/Timiimiimii/TomoKoreFacepaintTool) by Timimimi
+This project improves upon the original [TomoKoreFacepaintTool](https://github.com/Timiimiimii/TomoKoreFacepaintTool) by Timimimi using AI
 
 ## Improvements over the original
 
