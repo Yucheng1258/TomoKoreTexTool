@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>透明边框图片导出器 · 256×256 PNG</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg: #EEF0F4;
+      --surface: #F8F9FB;
+      --surface2: #FFFFFF;
+      --surface3: #F0F2F6;
+      --text: #1E2433;
+      --text-secondary: #4E5670;
+      --text-muted: #A8B0C4;
+      --accent: #4C6EF5;
+      --accent-light: #6685F7;
+      --accent-glow: rgba(76, 110, 245, 0.18);
+      --green: #22A06B;
+      --green-dark: #1a7d53;
+      --green-glow: rgba(34, 160, 107, 0.18);
+      --border: #DDE1E9;
+      --border-subtle: #E8EBF1;
+      --checker-light: #D8DCE6;
+      --checker-dark: #C8CDD9;
+      --radius-xs: 6px;
+      --radius-sm: 10px;
+      --radius: 16px;
+      --radius-lg: 20px;
+      --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      -webkit-user-select: none;
+      user-select: none;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(76, 110, 245, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 85%, rgba(34, 160, 107, 0.05) 0%, transparent 55%);
+    }
+
+    .app-container {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.8) inset,
+        0 8px 32px rgba(100,116,139,0.12),
+        0 2px 8px rgba(100,116,139,0.08);
+      padding: 36px 32px 28px;
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent) 0%, #7C3AED 100%);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+    .header-icon svg { width: 22px; height: 22px; color: #fff; }
+    .header-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+    }
+    .header-text .subtitle {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      letter-spacing: 0.01em;
+    }
+    .header-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .mode-segmented {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: var(--surface3);
+      border: 1px solid rgba(76, 110, 245, 0.22);
+      border-radius: 999px;
+      box-shadow: 0 2px 10px rgba(76, 110, 245, 0.08);
+    }
+    .mode-segment {
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 10px 16px;
+      min-height: 40px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      transition: all var(--transition);
+    }
+    .mode-segment:hover {
+      background: rgba(76, 110, 245, 0.08);
+      color: var(--accent);
+    }
+    .mode-segment.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 3px 12px rgba(76, 110, 245, 0.22);
+    }
+
+    .main-layout {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .panel-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      transition: border-color var(--transition);
+      /* 固定宽度，确保两个面板完全一致 */
+      width: 316px;
+      flex-shrink: 0;
+      justify-content: flex-start;
+    }
+    .panel-card > .btn:last-child {
+      margin-top: 0;
+    }
+    /* 底部控件区：固定布局，两侧面板底部对齐 */
+    .panel-bottom {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .panel-card:hover { border-color: #C8CDD9; }
+
+    .panel-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .panel-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .panel-dot.edit { background: var(--accent); box-shadow: 0 0 6px rgba(76,110,245,0.4); }
+    .panel-dot.preview { background: var(--green); box-shadow: 0 0 6px rgba(34,160,107,0.4); }
+    .panel-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-secondary);
+    }
+    .panel-hint {
+      margin-left: auto;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.03em;
+    }
+
+    .checkerboard-bg {
+      background-image:
+        linear-gradient(45deg, var(--checker-dark) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--checker-dark) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--checker-dark) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--checker-dark) 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      background-color: var(--checker-light);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      width: 256px;
+      height: 256px;
+      flex-shrink: 0;
+    }
+    .checkerboard-bg.edit-bg {
+      outline: 1.5px dashed rgba(79, 134, 247, 0.35);
+      outline-offset: -1px;
+      transition: outline-color var(--transition), box-shadow var(--transition);
+    }
+    .checkerboard-bg.edit-bg:hover {
+      outline-color: rgba(79, 134, 247, 0.65);
+      box-shadow: 0 0 0 4px rgba(79, 134, 247, 0.08);
+    }
+    .checkerboard-bg.edit-bg.dragging {
+      outline-color: var(--accent);
+      box-shadow: 0 0 0 6px var(--accent-glow);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      display: inline-block;
+      line-height: 0;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: box-shadow var(--transition);
+    }
+    .canvas-wrapper.edit-wrapper {
+      cursor: grab;
+    }
+    .canvas-wrapper.edit-wrapper:active,
+    .canvas-wrapper.edit-wrapper.dragging {
+      cursor: grabbing;
+    }
+    .canvas-wrapper.preview-wrapper {
+    }
+
+    canvas {
+      display: block;
+      image-rendering: auto;
+      width: 256px;
+      height: 256px;
+    }
+
+    .no-image-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 256px;
+      height: 256px;
+      gap: 8px;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .no-image-placeholder svg {
+      width: 32px;
+      height: 32px;
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+    .no-image-placeholder .text {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.04em;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition);
+      white-space: nowrap;
+      outline: none;
+      position: relative;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .btn-md { padding: 9px 18px; font-size: 0.82rem; border-radius: 10px; }
+    .btn-sm { padding: 6px 13px; font-size: 0.75rem; border-radius: 8px; }
+    .btn-xs { padding: 5px 11px; font-size: 0.7rem; border-radius: 7px; }
+    .btn-icon { width: 32px; height: 32px; padding: 0; border-radius: 8px; font-size: 1rem; }
+
+    /* 编辑区域上下移动按钮：导入图片后显示在透明区域中间 */
+    .move-btn {
+      position: absolute;
+      left: 50%;
+      z-index: 8;
+      width: 46px;
+      height: 30px;
+      padding: 0;
+      border-radius: 999px;
+      background: rgba(248, 249, 251, 0.92);
+      border: 1px solid rgba(76, 110, 245, 0.35);
+      color: var(--accent);
+      box-shadow: 0 4px 14px rgba(30, 36, 51, 0.12);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateX(-50%) scale(0.96);
+    }
+    .move-btn.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateX(-50%) scale(1);
+    }
+    .move-btn:hover {
+      background: #FFFFFF;
+      border-color: rgba(76, 110, 245, 0.65);
+      color: var(--accent-light);
+      box-shadow: 0 6px 18px rgba(76, 110, 245, 0.18);
+    }
+    .move-btn:active {
+      transform: translateX(-50%) scale(0.94);
+    }
+    .move-btn-up { top: 13px; }
+    .move-btn-down { bottom: 13px; }
+    .move-btn svg { width: 17px; height: 17px; }
+
+    .move-btn.side-btn {
+      top: 50%;
+      bottom: auto;
+      width: 30px;
+      height: 46px;
+      transform: translateY(-50%) scale(0.96);
+    }
+    .move-btn.side-btn.show {
+      transform: translateY(-50%) scale(1);
+    }
+    .move-btn.side-btn:active {
+      transform: translateY(-50%) scale(0.94);
+    }
+    .move-btn-left { left: 4px; right: auto; }
+    .move-btn-right { left: auto; right: 4px; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+    .btn-primary:hover {
+      background: var(--accent-light);
+      box-shadow: 0 4px 18px rgba(79,134,247,0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-green {
+      background: var(--green);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 2px 10px var(--green-glow);
+    }
+    .btn-green:hover {
+      background: #1d8a5c;
+      box-shadow: 0 4px 18px rgba(34,160,107,0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .btn-ghost:hover {
+      background: #E8EBF2;
+      border-color: #C8CDD9;
+      color: var(--text);
+    }
+
+    .zoom-display {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      min-width: 48px;
+      text-align: center;
+      letter-spacing: 0.03em;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 5px 9px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 96px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      border: 2px solid var(--accent);
+      transition: border-color var(--transition), transform var(--transition);
+    }
+    input[type="range"]:hover::-webkit-slider-thumb {
+      border-color: var(--accent-light);
+      transform: scale(1.1);
+    }
+
+    .filter-controls {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 4px;
+      height: 120px;
+      justify-content: space-between;
+    }
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+    }
+    .filter-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+      width: 28px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .filter-slider {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    .filter-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+      border: 2px solid var(--accent);
+      transition: border-color var(--transition), transform var(--transition);
+    }
+    .filter-slider:hover::-webkit-slider-thumb {
+      transform: scale(1.15);
+      border-color: var(--accent-light);
+    }
+    .filter-step {
+      width: 22px !important;
+      height: 22px !important;
+      flex-shrink: 0;
+      padding: 0;
+      border-radius: 6px !important;
+    }
+    .filter-value {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      min-width: 48px;
+      text-align: center;
+      letter-spacing: 0.03em;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 5px 9px;
+    }
+
+    .bottom-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .bottom-hint svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .kbd {
+      display: inline-block;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.65rem;
+      font-family: monospace;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      z-index: 999;
+      pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+      box-shadow: 0 8px 32px rgba(100,116,139,0.18), 0 0 0 1px rgba(0,0,0,0.05) inset;
+      opacity: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 900px) {
+      .main-layout { flex-direction: column; align-items: center; gap: 16px; }
+      .panel-card { width: min(316px, 100%); }
+      .app-container { padding: 24px 16px 20px; }
+      .app-header { flex-wrap: wrap; }
+      .header-badge { margin-left: 56px; }
+    }
+    @media (max-width: 480px) {
+      .panel-card { width: 100%; padding: 14px; }
+      canvas { width: 100%; height: auto; aspect-ratio: 1; }
+      .no-image-placeholder { width: 100%; height: auto; aspect-ratio: 1; }
+      .controls-row { gap: 4px; }
+      .btn-md { padding: 8px 14px; font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="app-header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/>
+        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1 id="toolTitle">《朋友收集梦想生活》宝物-书图片生成工具</h1>
+      <p class="subtitle">导入图片 → 调整显示区域 → 导出 256×256 透明边框 PNG</p>
+    </div>
+    <div class="header-badge">
+      <div class="mode-segmented" role="group" aria-label="宝物类型选择">
+        <button class="mode-segment active" data-mode="book" type="button">宝物-书</button>
+        <button class="mode-segment" data-mode="movie" type="button">宝物-影视</button>
+        <button class="mode-segment" data-mode="game" type="button">宝物-游戏</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+
+    <!-- 编辑面板 -->
+    <div class="panel-card" id="editPanel">
+      <div class="panel-header">
+        <span class="panel-dot edit"></span>
+        <span class="panel-title">编辑区域</span>
+        <span class="panel-hint" id="editPanelHint">256 × 256 · 中间 180px 可编辑</span>
+      </div>
+
+      <div class="checkerboard-bg edit-bg" id="editCheckerboard">
+        <div class="canvas-wrapper edit-wrapper" id="editWrapper">
+          <canvas id="editCanvas" width="256" height="256"></canvas>
+          <div class="no-image-placeholder" id="noImagePlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/>
+              <line x1="16" y1="5" x2="22" y2="5"/><line x1="19" y1="2" x2="19" y2="8"/>
+              <circle cx="9" cy="9" r="2"/>
+              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+            </svg>
+            <span class="text">拖入图片或点击下方按钮导入</span>
+          </div>
+          <button class="btn move-btn move-btn-up" id="btnMoveUp" type="button" title="图片向上移动" aria-label="图片向上移动">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+          <button class="btn move-btn move-btn-down" id="btnMoveDown" type="button" title="图片向下移动" aria-label="图片向下移动">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="panel-bottom">
+      <div class="filter-controls">
+        <!-- 行1：缩放 — 镜像亮度行 -->
+        <div class="filter-row">
+          <span class="filter-label">缩放</span>
+          <button class="btn btn-ghost btn-icon filter-step" id="btnZoomOut" title="缩小">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <input type="range" class="filter-slider" id="zoomSlider" min="5" max="500" value="100" step="1">
+          <button class="btn btn-ghost btn-icon filter-step" id="btnZoomIn" title="放大">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <span class="filter-value" id="zoomDisplay">100%</span>
+        </div>
+        <!-- 行2：适应 / 填充 — 镜像对比行 -->
+        <div class="filter-row">
+          <button class="btn btn-ghost btn-xs" id="btnFit" style="flex:1;">适应</button>
+          <button class="btn btn-ghost btn-xs" id="btnFill" style="flex:1;">填充</button>
+        </div>
+        <!-- 行3：原始 / 居中 — 镜像饱和行 -->
+        <div class="filter-row">
+          <button class="btn btn-ghost btn-xs" id="btnActualSize" style="flex:1;">原始</button>
+          <button class="btn btn-ghost btn-xs" id="btnReset" style="flex:1;">居中</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-md" id="btnImport" style="width:100%;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        导入图片
+      </button>
+      <input type="file" id="fileInput" accept="image/*" style="display:none;">
+      </div>
+    </div>
+
+    <!-- 预览面板 -->
+    <div class="panel-card" id="previewPanel">
+      <div class="panel-header">
+        <span class="panel-dot preview"></span>
+        <span class="panel-title">导出预览</span>
+        <span class="panel-hint" id="previewPanelHint">256 × 256 · 左右 38/38px 透明</span>
+      </div>
+
+      <div class="checkerboard-bg" id="previewCheckerboard">
+        <div class="canvas-wrapper preview-wrapper" id="previewWrapper">
+          <canvas id="previewCanvas" width="256" height="256"></canvas>
+        </div>
+      </div>
+
+      <div class="panel-bottom">
+      <div class="filter-controls">
+        <div class="filter-row">
+          <span class="filter-label">亮度</span>
+          <button class="btn btn-ghost btn-icon filter-step" data-target="slBrightness" data-val="valBrightness" data-delta="-1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <input type="range" class="filter-slider" id="slBrightness" min="0" max="200" value="100" step="1">
+          <button class="btn btn-ghost btn-icon filter-step" data-target="slBrightness" data-val="valBrightness" data-delta="1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <span class="filter-value" id="valBrightness">100%</span>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">对比</span>
+          <button class="btn btn-ghost btn-icon filter-step" data-target="slContrast" data-val="valContrast" data-delta="-1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <input type="range" class="filter-slider" id="slContrast" min="0" max="200" value="100" step="1">
+          <button class="btn btn-ghost btn-icon filter-step" data-target="slContrast" data-val="valContrast" data-delta="1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <span class="filter-value" id="valContrast">100%</span>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">饱和</span>
+          <button class="btn btn-ghost btn-icon filter-step" data-target="slSaturation" data-val="valSaturation" data-delta="-1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <input type="range" class="filter-slider" id="slSaturation" min="0" max="200" value="100" step="1">
+          <button class="btn btn-ghost btn-icon filter-step" data-target="slSaturation" data-val="valSaturation" data-delta="1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <span class="filter-value" id="valSaturation">100%</span>
+        </div>
+      </div>
+
+      <button class="btn btn-green btn-md" id="btnExport" style="width:100%">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        导出 PNG
+      </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span id="bottomHintText">拖放图片 · 滚轮缩放 · 拖拽平移 · 上/下按钮微调 · 粘贴</span>
+    <span class="kbd">Ctrl+S</span> 导出
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  (function() {
+    const editCanvas = document.getElementById('editCanvas');
+    const editCtx = editCanvas.getContext('2d');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const previewCtx = previewCanvas.getContext('2d');
+    const editWrapper = document.getElementById('editWrapper');
+    const editCheckerboard = document.getElementById('editCheckerboard');
+    const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+    const btnMoveUp = document.getElementById('btnMoveUp');
+    const btnMoveDown = document.getElementById('btnMoveDown');
+    const modeSegments = document.querySelectorAll('.mode-segment');
+    const toolTitle = document.getElementById('toolTitle');
+    const editPanelHint = document.getElementById('editPanelHint');
+    const previewPanelHint = document.getElementById('previewPanelHint');
+    const bottomHintText = document.getElementById('bottomHintText');
+    const fileInput = document.getElementById('fileInput');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomDisplay = document.getElementById('zoomDisplay');
+    const toast = document.getElementById('toast');
+
+    let currentImage = null;
+    let scale = 1, tx = 0, ty = 0;   // tx,ty 相对内容区左上角
+    let fitScale = 1, fillScale = 1;
+    let isDragging = false;
+    let dragStartX = 0, dragStartY = 0, dragStartTx = 0, dragStartTy = 0;
+    let hasImage = false;
+    let currentMode = 'book';
+
+    // ── 滤镜状态 ──
+    let filterBrightness = 100, filterContrast = 100, filterSaturation = 100;
+
+    function getFilterString() {
+      return `brightness(${filterBrightness}%) contrast(${filterContrast}%) saturate(${filterSaturation}%)`;
+    }
+
+    const CANVAS_SIZE = 256;
+    const MODE_CONFIGS = {
+      book: {
+        key: 'book',
+        itemName: '宝物-书',
+        title: '《朋友收集梦想生活》宝物-书图片生成工具',
+        editHint: '256 × 256 · 中间 180px 可编辑',
+        previewHint: '256 × 256 · 左右 38/38px 透明',
+        bottomHint: '拖放图片 · 滚轮缩放 · 拖拽平移 · 左/右按钮微调 · 粘贴',
+        x: 38,
+        y: 0,
+        w: 180,
+        h: 256,
+        axis: 'horizontal',
+        filePrefix: 'treasure-book'
+      },
+      movie: {
+        key: 'movie',
+        itemName: '宝物-影视',
+        title: '《朋友收集梦想生活》宝物-影视图片生成工具',
+        editHint: '256 × 256 · 中间 131px 可编辑',
+        previewHint: '256 × 256 · 上 63px / 下 62px 透明',
+        bottomHint: '拖放图片 · 滚轮缩放 · 拖拽平移 · 上/下按钮微调 · 粘贴',
+        x: 0,
+        y: 63,
+        w: 256,
+        h: 131,
+        axis: 'vertical',
+        filePrefix: 'treasure-movie'
+      },
+      game: {
+        key: 'game',
+        itemName: '宝物-游戏',
+        title: '《朋友收集梦想生活》宝物-游戏图片生成工具',
+        editHint: '256 × 256 · 中间 144px 可编辑',
+        previewHint: '256 × 256 · 上下 56/56px 透明',
+        bottomHint: '拖放图片 · 滚轮缩放 · 拖拽平移 · 上/下按钮微调 · 粘贴',
+        x: 0,
+        y: 56,
+        w: 256,
+        h: 144,
+        axis: 'vertical',
+        filePrefix: 'treasure-game'
+      }
+    };
+
+    function cfg() { return MODE_CONFIGS[currentMode]; }
+
+    function recalculateScales() {
+      if (!currentImage || !hasImage) return;
+      fitScale = calculateFitScale(currentImage.naturalWidth, currentImage.naturalHeight);
+      fillScale = calculateFillScale(currentImage.naturalWidth, currentImage.naturalHeight);
+    }
+
+    function upIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+    }
+    function downIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+    }
+    function leftIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
+    }
+    function rightIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+    }
+
+    // ── Toast ──
+    let toastTimer;
+    function showToast(msg) {
+      clearTimeout(toastTimer);
+      toast.textContent = msg;
+      toast.classList.add('show');
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function drawGuideLines(ctx, color) {
+      const c = cfg();
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.setLineDash([6, 4]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (c.y > 0) {
+        ctx.moveTo(0, c.y);
+        ctx.lineTo(CANVAS_SIZE, c.y);
+        ctx.moveTo(0, c.y + c.h);
+        ctx.lineTo(CANVAS_SIZE, c.y + c.h);
+      }
+      if (c.x > 0) {
+        ctx.moveTo(c.x, 0);
+        ctx.lineTo(c.x, CANVAS_SIZE);
+        ctx.moveTo(c.x + c.w, 0);
+        ctx.lineTo(c.x + c.w, CANVAS_SIZE);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ── 绘制编辑画布 ──
+    function drawEditCanvas() {
+      const c = cfg();
+      editCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      if (!currentImage || !hasImage) return;
+
+      editCtx.save();
+      // 裁剪到当前模式的内容区域
+      editCtx.beginPath();
+      editCtx.rect(c.x, c.y, c.w, c.h);
+      editCtx.clip();
+
+      editCtx.imageSmoothingEnabled = true;
+      editCtx.imageSmoothingQuality = 'high';
+      const drawW = currentImage.naturalWidth * scale;
+      const drawH = currentImage.naturalHeight * scale;
+      editCtx.drawImage(currentImage, c.x + tx, c.y + ty, drawW, drawH);
+      editCtx.restore();
+
+      // 内容区边界参考线
+      drawGuideLines(editCtx, 'rgba(129, 140, 248, 0.25)');
+    }
+
+    // ── 绘制预览画布 ──
+    function drawPreviewCanvas() {
+      const c = cfg();
+      previewCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      if (!hasImage) return;
+
+      // 先绘到离屏画布，再用 filter 合成到预览
+      const off = document.createElement('canvas');
+      off.width = CANVAS_SIZE; off.height = CANVAS_SIZE;
+      const offCtx = off.getContext('2d');
+      offCtx.imageSmoothingEnabled = true;
+      offCtx.imageSmoothingQuality = 'high';
+      offCtx.drawImage(editCanvas, c.x, c.y, c.w, c.h, c.x, c.y, c.w, c.h);
+
+      previewCtx.save();
+      previewCtx.filter = getFilterString();
+      previewCtx.drawImage(off, 0, 0);
+      previewCtx.restore();
+
+      // 边界参考线（无滤镜）
+      drawGuideLines(previewCtx, 'rgba(34, 160, 107, 0.18)');
+    }
+
+    function updateAllCanvases() {
+      drawEditCanvas();
+      drawPreviewCanvas();
+      updatePlaceholderVisibility();
+    }
+
+    function updatePlaceholderVisibility() {
+      noImagePlaceholder.style.display = hasImage ? 'none' : 'flex';
+      btnMoveUp.classList.toggle('show', hasImage);
+      btnMoveDown.classList.toggle('show', hasImage);
+    }
+
+    function refreshModeUI() {
+      const c = cfg();
+      toolTitle.textContent = c.title;
+      editPanelHint.textContent = c.editHint;
+      previewPanelHint.textContent = c.previewHint;
+      bottomHintText.textContent = c.bottomHint;
+      modeSegments.forEach(segment => segment.classList.toggle('active', segment.dataset.mode === currentMode));
+
+      btnMoveUp.classList.remove('move-btn-up', 'move-btn-down', 'side-btn', 'move-btn-left', 'move-btn-right');
+      btnMoveDown.classList.remove('move-btn-up', 'move-btn-down', 'side-btn', 'move-btn-left', 'move-btn-right');
+
+      if (c.axis === 'vertical') {
+        btnMoveUp.classList.add('move-btn-up');
+        btnMoveDown.classList.add('move-btn-down');
+        btnMoveUp.innerHTML = upIcon();
+        btnMoveDown.innerHTML = downIcon();
+        btnMoveUp.title = '图片向上移动';
+        btnMoveDown.title = '图片向下移动';
+        btnMoveUp.setAttribute('aria-label', '图片向上移动');
+        btnMoveDown.setAttribute('aria-label', '图片向下移动');
+      } else {
+        btnMoveUp.classList.add('side-btn', 'move-btn-left');
+        btnMoveDown.classList.add('side-btn', 'move-btn-right');
+        btnMoveUp.innerHTML = leftIcon();
+        btnMoveDown.innerHTML = rightIcon();
+        btnMoveUp.title = '图片向左移动';
+        btnMoveDown.title = '图片向右移动';
+        btnMoveUp.setAttribute('aria-label', '图片向左移动');
+        btnMoveDown.setAttribute('aria-label', '图片向右移动');
+      }
+      updatePlaceholderVisibility();
+    }
+
+    function switchMode(nextMode) {
+      if (!MODE_CONFIGS[nextMode] || nextMode === currentMode) return;
+      const old = cfg();
+
+      let centerRatioX = 0.5;
+      let centerRatioY = 0.5;
+      if (hasImage && currentImage) {
+        const drawW = currentImage.naturalWidth * scale;
+        const drawH = currentImage.naturalHeight * scale;
+        centerRatioX = drawW > 0 ? (old.w / 2 - tx) / drawW : 0.5;
+        centerRatioY = drawH > 0 ? (old.h / 2 - ty) / drawH : 0.5;
+      }
+
+      currentMode = nextMode;
+      if (hasImage && currentImage) {
+        recalculateScales();
+      }
+
+      if (hasImage && currentImage) {
+        const c = cfg();
+        const drawW = currentImage.naturalWidth * scale;
+        const drawH = currentImage.naturalHeight * scale;
+        tx = c.w / 2 - centerRatioX * drawW;
+        ty = c.h / 2 - centerRatioY * drawH;
+        clampOffsets();
+      }
+
+      refreshModeUI();
+      updateAllCanvases();
+      updateZoomUI();
+      showToast(`已切换为${cfg().itemName}`);
+    }
+
+    // ── 移动工具 ──
+    function moveImageBy(sign, step) {
+      if (!currentImage || !hasImage) return;
+      if (cfg().axis === 'vertical') ty += sign * step;
+      else tx += sign * step;
+      clampOffsets();
+      updateAllCanvases();
+    }
+
+    // ── 缩放工具 ──
+    function calculateFitScale(w, h) {
+      const c = cfg();
+      return Math.min(c.w / w, c.h / h);
+    }
+    function calculateFillScale(w, h) {
+      const c = cfg();
+      return Math.max(c.w / w, c.h / h);
+    }
+
+    function centerImage(w, h, s) {
+      const c = cfg();
+      tx = (c.w - w * s) / 2;
+      ty = (c.h - h * s) / 2;
+    }
+
+    function clampOffsets() {
+      if (!currentImage || !hasImage) return;
+      const c = cfg();
+      const drawW = currentImage.naturalWidth * scale;
+      const drawH = currentImage.naturalHeight * scale;
+      const m = 0.1;
+      if (drawW > c.w * 0.3 && drawH > c.h * 0.3) {
+        tx = Math.max(-(drawW * (1 - m)), Math.min(c.w - drawW * m, tx));
+        ty = Math.max(-(drawH * (1 - m)), Math.min(c.h - drawH * m, ty));
+      }
+    }
+
+    function updateScale(newScale, cx = null, cy = null) {
+      if (!currentImage || !hasImage) return;
+      const oldScale = scale;
+      scale = Math.max(0.05, Math.min(20, newScale));
+      if (cx !== null && cy !== null && oldScale > 0) {
+        const ix = (cx - tx) / oldScale, iy = (cy - ty) / oldScale;
+        tx = cx - ix * scale; ty = cy - iy * scale;
+      }
+      clampOffsets(); updateAllCanvases(); updateZoomUI();
+    }
+
+    function updateZoomUI() {
+      const p = Math.round(scale * 100);
+      zoomSlider.value = p;
+      zoomDisplay.textContent = p + '%';
+    }
+
+    function syncZoomFromSlider() {
+      const c = cfg();
+      const ns = parseInt(zoomSlider.value) / 100;
+      if (Math.abs(ns - scale) > 0.001) updateScale(ns, c.w / 2, c.h / 2);
+    }
+
+    // ── 图片加载 ──
+    function loadImageFromFile(file) {
+      if (!file || !file.type.match(/image\//)) { showToast('请选择图片文件'); return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          currentImage = img; hasImage = true;
+          fitScale = calculateFitScale(img.naturalWidth, img.naturalHeight);
+          fillScale = calculateFillScale(img.naturalWidth, img.naturalHeight);
+          scale = fitScale;
+          centerImage(img.naturalWidth, img.naturalHeight, scale);
+          clampOffsets(); updateAllCanvases(); updateZoomUI();
+          showToast('图片已加载');
+        };
+        img.onerror = () => showToast('图片加载失败');
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function loadImageFromURL(url) {
+      const img = new Image();
+      img.onload = () => {
+        currentImage = img; hasImage = true;
+        fitScale = calculateFitScale(img.naturalWidth, img.naturalHeight);
+        fillScale = calculateFillScale(img.naturalWidth, img.naturalHeight);
+        scale = fitScale;
+        centerImage(img.naturalWidth, img.naturalHeight, scale);
+        clampOffsets(); updateAllCanvases(); updateZoomUI();
+        showToast('图片已粘贴');
+      };
+      img.onerror = () => showToast('无法加载该图片');
+      img.src = url;
+    }
+
+    // ── 导出 ──
+    function exportPNG() {
+      if (!hasImage) { showToast('请先导入一张图片'); return; }
+      const c = cfg();
+      const ec = document.createElement('canvas');
+      ec.width = CANVAS_SIZE; ec.height = CANVAS_SIZE;
+      const ectx = ec.getContext('2d');
+      ectx.imageSmoothingEnabled = true;
+      ectx.imageSmoothingQuality = 'high';
+      // 先完整绘制图像（含滤镜），再用 clearRect 硬清除透明区域
+      // 避免 clip() 抗锯齿导致边界出现半透明条纹
+      ectx.filter = getFilterString();
+      const drawW = currentImage.naturalWidth * scale;
+      const drawH = currentImage.naturalHeight * scale;
+      ectx.drawImage(currentImage, c.x + tx, c.y + ty, drawW, drawH);
+      ectx.filter = 'none';
+
+      // 硬清除透明边框区域，像素完全归零，不留任何渗色
+      if (c.y > 0) {
+        ectx.clearRect(0, 0, CANVAS_SIZE, c.y);
+        ectx.clearRect(0, c.y + c.h, CANVAS_SIZE, CANVAS_SIZE - (c.y + c.h));
+      }
+      if (c.x > 0) {
+        ectx.clearRect(0, 0, c.x, CANVAS_SIZE);
+        ectx.clearRect(c.x + c.w, 0, CANVAS_SIZE - (c.x + c.w), CANVAS_SIZE);
+      }
+
+      ec.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${c.filePrefix}-${new Date().toISOString().replace(/[:.]/g, '-').slice(0,19)}.png`;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+        showToast(`PNG 已导出 (${c.itemName} · 256×256)`);
+      }, 'image/png');
+    }
+
+    // ── 鼠标坐标 → 内容区逻辑坐标 ──
+    function getPos(e) {
+      const c = cfg();
+      const r = editCanvas.getBoundingClientRect();
+      // 画布坐标
+      const canvasX = (e.clientX - r.left) * CANVAS_SIZE / r.width;
+      const canvasY = (e.clientY - r.top) * CANVAS_SIZE / r.height;
+      // 转换为内容区相对坐标
+      return { x: canvasX - c.x, y: canvasY - c.y };
+    }
+
+    // ── 鼠标交互 ──
+    editCanvas.addEventListener('mousedown', e => {
+      if (!hasImage || e.button !== 0) return;
+      e.preventDefault();
+      const c = cfg();
+      const p = getPos(e);
+      // 只在内容区内拖拽
+      if (p.x < 0 || p.x > c.w || p.y < 0 || p.y > c.h) return;
+      isDragging = true;
+      dragStartX = p.x; dragStartY = p.y;
+      dragStartTx = tx; dragStartTy = ty;
+      editWrapper.classList.add('dragging');
+      editCheckerboard.classList.add('dragging');
+      document.body.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const p = getPos(e);
+      tx = dragStartTx + (p.x - dragStartX);
+      ty = dragStartTy + (p.y - dragStartY);
+      clampOffsets(); updateAllCanvases();
+    });
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      editWrapper.classList.remove('dragging');
+      editCheckerboard.classList.remove('dragging');
+      document.body.style.cursor = '';
+    });
+    editCanvas.addEventListener('wheel', e => {
+      if (!hasImage) return;
+      e.preventDefault();
+      const p = getPos(e);
+      const f = -e.deltaY > 0 ? 1.08 : 1 / 1.08;
+      updateScale(scale * f, p.x, p.y);
+    }, { passive: false });
+
+    zoomSlider.addEventListener('input', syncZoomFromSlider);
+    document.getElementById('btnZoomIn').addEventListener('click', () => {
+      const c = cfg();
+      if (hasImage) updateScale(scale + 0.01, c.w/2, c.h/2);
+    });
+    document.getElementById('btnZoomOut').addEventListener('click', () => {
+      const c = cfg();
+      if (hasImage) updateScale(scale - 0.01, c.w/2, c.h/2);
+    });
+    document.getElementById('btnFit').addEventListener('click', () => {
+      if (!hasImage || !currentImage) return;
+      scale = fitScale; centerImage(currentImage.naturalWidth, currentImage.naturalHeight, scale);
+      clampOffsets(); updateAllCanvases(); updateZoomUI();
+    });
+    document.getElementById('btnFill').addEventListener('click', () => {
+      if (!hasImage || !currentImage) return;
+      scale = fillScale; centerImage(currentImage.naturalWidth, currentImage.naturalHeight, scale);
+      clampOffsets(); updateAllCanvases(); updateZoomUI();
+    });
+    document.getElementById('btnActualSize').addEventListener('click', () => {
+      const c = cfg();
+      if (hasImage) updateScale(1, c.w/2, c.h/2);
+    });
+    document.getElementById('btnReset').addEventListener('click', () => {
+      if (!hasImage || !currentImage) return;
+      centerImage(currentImage.naturalWidth, currentImage.naturalHeight, scale);
+      clampOffsets(); updateAllCanvases(); updateZoomUI();
+    });
+
+    function bindMoveButton(button, sign) {
+      let holdTimer = null;
+      let repeatTimer = null;
+      const clearTimers = () => {
+        clearTimeout(holdTimer);
+        clearInterval(repeatTimer);
+        holdTimer = null;
+        repeatTimer = null;
+      };
+      const startMove = e => {
+        if (!hasImage) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const step = e.shiftKey ? 10 : 1;
+        moveImageBy(sign, step);
+        clearTimers();
+        holdTimer = setTimeout(() => {
+          repeatTimer = setInterval(() => moveImageBy(sign, step), 45);
+        }, 260);
+      };
+      button.addEventListener('pointerdown', startMove);
+      button.addEventListener('pointerup', clearTimers);
+      button.addEventListener('pointerleave', clearTimers);
+      button.addEventListener('pointercancel', clearTimers);
+      button.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    }
+    bindMoveButton(btnMoveUp, -1);
+    bindMoveButton(btnMoveDown, 1);
+    modeSegments.forEach(segment => {
+      segment.addEventListener('click', () => switchMode(segment.dataset.mode));
+    });
+    document.getElementById('btnExport').addEventListener('click', exportPNG);
+    document.getElementById('btnImport').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files?.length > 0) { loadImageFromFile(fileInput.files[0]); fileInput.value = ''; }
+    });
+
+    // ── 拖放 ──
+    const editPanel = document.getElementById('editPanel');
+    editPanel.addEventListener('dragover', e => {
+      e.preventDefault(); e.stopPropagation();
+      editCheckerboard.style.boxShadow = '0 0 0 3px rgba(79,134,247,0.35)';
+    });
+    editPanel.addEventListener('dragleave', e => {
+      e.preventDefault(); e.stopPropagation();
+      editCheckerboard.style.boxShadow = '';
+    });
+    editPanel.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      editCheckerboard.style.boxShadow = '';
+      if (e.dataTransfer.files?.length > 0) {
+        loadImageFromFile(e.dataTransfer.files[0]);
+      } else if (e.dataTransfer.items) {
+        for (let item of e.dataTransfer.items) {
+          if (item.type.match(/image\//) && item.getAsFile) { loadImageFromFile(item.getAsFile()); return; }
+          else if (item.type === 'text/uri-list' || item.type === 'text/plain') {
+            item.getAsString(str => {
+              const url = str.trim();
+              if (url && (url.startsWith('http') || url.startsWith('data:image'))) loadImageFromURL(url);
+            });
+            return;
+          }
+        }
+      }
+    });
+
+    // ── 粘贴 ──
+    document.addEventListener('paste', e => {
+      if (['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let item of items) {
+        if (item.type.match(/image\//)) {
+          const f = item.getAsFile();
+          if (f) { loadImageFromFile(f); e.preventDefault(); return; }
+        }
+      }
+    });
+
+    // ── 键盘快捷键 ──
+    document.addEventListener('keydown', e => {
+      if (['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      if (!hasImage) return;
+      const c = cfg();
+      const step = e.shiftKey ? 10 : 1;
+      switch (e.key.toLowerCase()) {
+        case 'arrowleft':  e.preventDefault(); tx -= step; clampOffsets(); updateAllCanvases(); break;
+        case 'arrowright': e.preventDefault(); tx += step; clampOffsets(); updateAllCanvases(); break;
+        case 'arrowup':    e.preventDefault(); ty -= step; clampOffsets(); updateAllCanvases(); break;
+        case 'arrowdown':  e.preventDefault(); ty += step; clampOffsets(); updateAllCanvases(); break;
+        case '+': case '=': e.preventDefault(); updateScale(scale + 0.01, c.w/2, c.h/2); break;
+        case '-': e.preventDefault(); updateScale(scale - 0.01, c.w/2, c.h/2); break;
+        case '0':
+        case 'f': e.preventDefault(); if (currentImage && !e.ctrlKey && !e.metaKey) { scale = fitScale; centerImage(currentImage.naturalWidth, currentImage.naturalHeight, scale); clampOffsets(); updateAllCanvases(); updateZoomUI(); } break;
+        case 's': if (e.ctrlKey || e.metaKey) { e.preventDefault(); exportPNG(); } break;
+      }
+    });
+
+    // ── 触摸 ──
+    let touchStartDist = 0, touchStartScale = 1, touchStartMidX = 0, touchStartMidY = 0;
+    let touchStartTxT = 0, touchStartTyT = 0, isPinching = false;
+
+    editCanvas.addEventListener('touchstart', e => {
+      if (!hasImage) return;
+      const c = cfg();
+      if (e.touches.length === 1) {
+        const p = getPos(e.touches[0]);
+        if (p.x < 0 || p.x > c.w || p.y < 0 || p.y > c.h) return;
+        dragStartX = p.x; dragStartY = p.y; dragStartTx = tx; dragStartTy = ty;
+        isDragging = true; isPinching = false; editWrapper.classList.add('dragging'); editCheckerboard.classList.add('dragging');
+      } else if (e.touches.length === 2) {
+        isDragging = false; isPinching = true;
+        const t1 = e.touches[0], t2 = e.touches[1];
+        touchStartDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        touchStartScale = scale;
+        touchStartMidX = (t1.clientX + t2.clientX) / 2;
+        touchStartMidY = (t1.clientY + t2.clientY) / 2;
+        touchStartTxT = tx; touchStartTyT = ty;
+        editWrapper.classList.add('dragging'); editCheckerboard.classList.add('dragging');
+      }
+      if (e.touches.length >= 2) e.preventDefault();
+    }, { passive: false });
+
+    editCanvas.addEventListener('touchmove', e => {
+      if (!hasImage) return;
+      const c = cfg();
+      if (isPinching && e.touches.length === 2) {
+        e.preventDefault();
+        const t1 = e.touches[0], t2 = e.touches[1];
+        const newDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        const newMidX = (t1.clientX + t2.clientX) / 2, newMidY = (t1.clientY + t2.clientY) / 2;
+        const newScale = touchStartScale * (touchStartDist > 0 ? newDist / touchStartDist : 1);
+        const rect = editCanvas.getBoundingClientRect();
+        const sX = CANVAS_SIZE / rect.width, sY = CANVAS_SIZE / rect.height;
+        // 中点在画布上的位置 → 内容区坐标
+        const slX = ((touchStartMidX - rect.left) * sX) - c.x;
+        const slY = ((touchStartMidY - rect.top) * sY) - c.y;
+        const nlX = ((newMidX - rect.left) * sX) - c.x;
+        const nlY = ((newMidY - rect.top) * sY) - c.y;
+        const oldScale = scale;
+        scale = Math.max(0.05, Math.min(20, newScale));
+        if (oldScale > 0) {
+          const ix = (slX - touchStartTxT) / oldScale, iy = (slY - touchStartTyT) / oldScale;
+          tx = slX - ix * scale + (nlX - slX);
+          ty = slY - iy * scale + (nlY - slY);
+        }
+        clampOffsets(); updateAllCanvases(); updateZoomUI();
+      } else if (isDragging && e.touches.length === 1) {
+        const p = getPos(e.touches[0]);
+        tx = dragStartTx + (p.x - dragStartX); ty = dragStartTy + (p.y - dragStartY);
+        clampOffsets(); updateAllCanvases();
+      }
+      if (e.touches.length >= 2) e.preventDefault();
+    }, { passive: false });
+
+    editCanvas.addEventListener('touchend', e => {
+      if (e.touches.length === 0) {
+        isDragging = false; isPinching = false; editWrapper.classList.remove('dragging'); editCheckerboard.classList.remove('dragging');
+      } else if (e.touches.length === 1 && isPinching) {
+        isPinching = false; isDragging = true;
+        const p = getPos(e.touches[0]);
+        dragStartX = p.x; dragStartY = p.y; dragStartTx = tx; dragStartTy = ty;
+      }
+    });
+
+    // ── 滤镜控件 ──
+    function bindFilter(sliderId, valId, suffix, onUpdate) {
+      const slider = document.getElementById(sliderId);
+      const val = document.getElementById(valId);
+      slider.addEventListener('input', () => {
+        onUpdate(parseInt(slider.value));
+        val.textContent = slider.value + suffix;
+        drawPreviewCanvas();
+      });
+    }
+    bindFilter('slBrightness', 'valBrightness', '%', v => filterBrightness = v);
+    bindFilter('slContrast',   'valContrast',   '%', v => filterContrast = v);
+    bindFilter('slSaturation', 'valSaturation', '%', v => filterSaturation = v);
+
+    // ── 滤镜 +/- 按钮 ──
+    const filterVarMap = {
+      slBrightness: v => filterBrightness = v,
+      slContrast:   v => filterContrast = v,
+      slSaturation: v => filterSaturation = v,
+    };
+    document.querySelectorAll('.filter-step[data-target]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const slider = document.getElementById(btn.dataset.target);
+        const valEl  = document.getElementById(btn.dataset.val);
+        const delta  = parseInt(btn.dataset.delta);
+        const newVal = Math.max(parseInt(slider.min), Math.min(parseInt(slider.max), parseInt(slider.value) + delta));
+        slider.value = newVal;
+        valEl.textContent = newVal + '%';
+        filterVarMap[btn.dataset.target](newVal);
+        drawPreviewCanvas();
+      });
+    });
+
+    // ── 初始化 ──
+    refreshModeUI();
+    updatePlaceholderVisibility();
+    updateZoomUI();
+    zoomSlider.value = 100;
+    editCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    previewCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  })();
+</script>
+</body>
+</html>
