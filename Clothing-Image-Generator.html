@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
+<title>上衣-坦克背心图片生成工具 · 256×256 PNG</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    :root{
+      --bg:#EEF0F4;--surface:#F8F9FB;--surface2:#fff;--surface3:#F0F2F6;
+      --text:#1E2433;--text-secondary:#40506d;--text-muted:#9AA5BA;
+      --accent:#4C6EF5;--accent-light:#6685F7;--accent-glow:rgba(76,110,245,.18);
+      --green:#22A06B;--border:#DDE1E9;--border-subtle:#E8EBF1;
+      --checker-light:#D8DCE6;--checker-dark:#C8CDD9;
+      --radius-sm:12px;--radius:16px;--radius-lg:22px;--transition:.18s cubic-bezier(.4,0,.2,1);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter','Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:14px;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;background-image:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(76,110,245,.06) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 85%,rgba(34,160,107,.05) 0%,transparent 55%)}
+    .app-container{width:min(1180px,100%);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 0 0 1px rgba(255,255,255,.8) inset,0 8px 32px rgba(100,116,139,.12),0 2px 8px rgba(100,116,139,.08);padding:20px 18px 14px}
+    .app-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+    .header-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),#7C3AED);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 16px var(--accent-glow)}
+    .header-icon svg{width:19px;height:19px;color:#fff}.header-text h1{font-size:1.05rem;font-weight:800;line-height:1.2;letter-spacing:-.02em}.subtitle{font-size:.74rem;color:var(--text-secondary);margin-top:2px}.header-badge{margin-left:auto}
+    .mode-segmented{display:inline-flex;align-items:center;gap:4px;padding:4px;background:var(--surface3);border:1px solid rgba(76,110,245,.22);border-radius:999px;box-shadow:0 2px 10px rgba(76,110,245,.08)}
+    .mode-segment{font-family:inherit;border:none;cursor:pointer;border-radius:999px;padding:8px 14px;min-height:34px;background:transparent;color:var(--text-secondary);font-size:.82rem;font-weight:800;white-space:nowrap;transition:all var(--transition)}
+    .mode-segment:hover{background:rgba(76,110,245,.08);color:var(--accent)}.mode-segment.active{background:var(--accent);color:#fff;box-shadow:0 3px 12px rgba(76,110,245,.22)}
+
+    .main-layout{display:grid;grid-template-columns:1fr;justify-items:center;align-items:start;margin-bottom:16px}
+    .panel-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 14px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;width:min(100%,620px)}
+    .panel-header{width:100%;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border-subtle)}
+    .panel-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.panel-dot.edit{background:var(--accent);box-shadow:0 0 6px rgba(76,110,245,.4)}
+    .panel-title{font-size:.72rem;font-weight:800;letter-spacing:.06em;color:var(--text-secondary)}.panel-hint{margin-left:auto;font-size:.62rem;color:var(--text-muted);letter-spacing:.03em}
+    .checkerboard-bg{background-image:linear-gradient(45deg,var(--checker-dark) 25%,transparent 25%),linear-gradient(-45deg,var(--checker-dark) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--checker-dark) 75%),linear-gradient(-45deg,transparent 75%,var(--checker-dark) 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;background-color:var(--checker-light);border-radius:var(--radius-sm);overflow:hidden;width:300px;height:300px;flex-shrink:0}
+    .checkerboard-bg.edit-bg{outline:1.5px dashed rgba(79,134,247,.35);outline-offset:-1px;transition:outline-color var(--transition),box-shadow var(--transition)}.checkerboard-bg.edit-bg:hover{outline-color:rgba(79,134,247,.65);box-shadow:0 0 0 4px rgba(79,134,247,.08)}.checkerboard-bg.edit-bg.dragging{outline-color:var(--accent);box-shadow:0 0 0 6px var(--accent-glow)}
+    .canvas-wrapper{position:relative;display:block;width:100%;height:100%;line-height:0;border-radius:var(--radius-sm);overflow:hidden}.canvas-wrapper.edit-wrapper{cursor:default}.canvas-wrapper.edit-wrapper.draggable{cursor:grab}.canvas-wrapper.edit-wrapper.dragging{cursor:grabbing!important}canvas{display:block;image-rendering:auto;width:100%;height:100%}
+    .no-image-placeholder{display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none}.no-image-placeholder svg{width:30px;height:30px;color:var(--text-secondary);opacity:.72}.no-image-placeholder .text{font-size:.72rem;color:var(--text-secondary);letter-spacing:.04em}
+
+    .control-board{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;box-shadow:0 1px 0 rgba(255,255,255,.8) inset}.control-grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,.78fr) minmax(0,1.16fr) minmax(0,1.16fr);gap:12px;align-items:stretch}.control-group{min-width:0;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;display:flex;flex-direction:column;gap:12px;height:100%}.control-group-title{font-size:.76rem;font-weight:800;color:var(--text-secondary);letter-spacing:.02em}
+    .book-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.book-active-hint{font-size:.72rem;font-weight:800;color:var(--accent);white-space:nowrap}.book-color-stack{display:flex;flex-direction:column;gap:10px;flex:1}.book-color-field{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:54px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;font-size:.78rem;font-weight:800;color:var(--text-secondary)}.book-color-field input[type=color]{appearance:none;-webkit-appearance:none;width:56px;height:34px;padding:0;border:none;background:transparent;cursor:pointer}.book-color-field input[type=color]::-webkit-color-swatch-wrapper{padding:0}.book-color-field input[type=color]::-webkit-color-swatch{border:1px solid var(--border);border-radius:9px}
+    .global-nudge-pad{align-self:center;display:grid;grid-template-columns:38px 38px 38px;grid-template-rows:38px 38px 38px;grid-template-areas:". up ." "left center right" ". down .";gap:6px;align-items:center;justify-items:center;margin:auto 0}.nudge-up{grid-area:up}.nudge-left{grid-area:left}.nudge-right{grid-area:right}.nudge-down{grid-area:down}.nudge-center{grid-area:center;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:.64rem;font-weight:800;color:var(--text-muted);background:var(--surface3);border:1px solid var(--border);border-radius:9px}.global-nudge-btn{width:38px!important;height:38px!important;border-radius:10px!important;font-size:1rem!important;font-weight:800}
+    .filter-controls{display:flex;flex-direction:column;gap:10px;flex:1;justify-content:center}.filter-row{display:flex;align-items:center;gap:6px;min-height:34px}.filter-label{font-size:.68rem;font-weight:800;color:var(--text-secondary);width:28px;text-align:right;flex:0 0 28px}.filter-slider,input[type=range]{-webkit-appearance:none;flex:1 1 auto;min-width:0;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer}.filter-slider::-webkit-slider-thumb,input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2);border:2px solid var(--accent)}.filter-value{flex:0 0 44px;min-width:44px;font-size:.72rem;font-weight:800;color:var(--text-secondary);text-align:center;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:5px 6px}.zoom-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.action-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.action-row .btn{min-height:42px;width:100%;font-size:.9rem}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;font-family:inherit;font-weight:800;border:none;cursor:pointer;transition:all var(--transition);white-space:nowrap;outline:none;position:relative}.btn:active{transform:scale(.96)}.btn-md{padding:9px 16px;font-size:.86rem;border-radius:12px}.btn-xs{padding:7px 12px;font-size:.76rem;border-radius:9px}.btn-icon{width:30px;height:30px;padding:0;border-radius:9px;font-size:1rem;flex:0 0 30px}.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 10px var(--accent-glow)}.btn-primary:hover{background:var(--accent-light);transform:translateY(-1px)}.btn-green{background:var(--green);color:#fff;box-shadow:0 2px 10px rgba(34,160,107,.18)}.btn-green:hover{background:#1d8a5c;transform:translateY(-1px)}.btn-ghost{background:var(--surface3);border:1px solid var(--border);color:var(--text-secondary)}.btn-ghost:hover{background:#E8EBF2;border-color:#C8CDD9;color:var(--text)}
+    .bottom-hint{font-size:.66rem;color:var(--text-muted);display:flex;align-items:center;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}.kbd{display:inline-block;background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:.6rem;font-family:monospace;color:var(--text-muted)}
+    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:12px;font-size:.82rem;font-weight:700;z-index:999;pointer-events:none;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;box-shadow:0 8px 32px rgba(100,116,139,.18);opacity:0}.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+    @media(max-width:980px){.control-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.action-row{grid-template-columns:1fr}}@media(max-width:720px){body{align-items:flex-start}.app-header{flex-wrap:wrap}.header-badge{margin-left:0;width:100%;overflow-x:auto}.mode-segmented{width:100%;justify-content:space-between}.control-grid{grid-template-columns:1fr}.checkerboard-bg{width:min(100%,300px);height:auto;aspect-ratio:1}.panel-card{width:100%}}
+  
+
+    /* short-sleeve four-color layout */
+    .book-color-stack.short-sleeve{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .book-color-stack.short-sleeve .book-color-field{min-height:54px}
+    .book-color-stack.short-sleeve .book-color-field span{white-space:nowrap}
+    .book-color-stack.top-hat-vertical{display:grid;grid-template-columns:1fr;grid-template-rows:repeat(3,minmax(0,1fr));gap:8px;flex:1}
+    .book-color-stack.top-hat-vertical .book-color-field{min-height:0;padding:8px 10px;font-size:.72rem}
+    .book-color-stack.top-hat-vertical .book-color-field input[type=color]{width:46px;height:28px}
+    .extra-book-field{display:none}
+    @media (max-width:900px){
+      .book-color-stack.short-sleeve{grid-template-columns:1fr}
+    }
+
+
+    /* ===== 分类 / 款式 两级切换 ===== */
+    .app-header{align-items:flex-start;gap:14px;flex-wrap:wrap}
+    .header-text{flex:0 1 auto}
+    .header-badge{margin-left:auto;display:flex;align-items:flex-start;justify-content:flex-end;min-width:min(100%,760px)}
+    .switch-board{display:flex;flex-direction:column;gap:12px;width:min(100%,760px)}
+    .switch-row{display:flex;align-items:center;gap:14px;min-width:0}
+    .switch-label{flex:0 0 auto;font-size:.96rem;font-weight:900;color:var(--text-secondary);line-height:1;white-space:nowrap}
+    .switch-track{flex:1 1 auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;padding:6px;background:var(--surface3);border:1px solid rgba(76,110,245,.22);border-radius:999px;box-shadow:0 2px 10px rgba(76,110,245,.08)}
+    .switch-option{font-family:inherit;border:none;cursor:pointer;border-radius:999px;padding:10px 20px;min-height:38px;background:transparent;color:#9aa3b5;font-size:.9rem;font-weight:900;white-space:nowrap;transition:all var(--transition)}
+    .switch-option:hover{background:rgba(76,110,245,.08);color:var(--accent)}
+    .switch-option.active{background:var(--accent);color:#fff;box-shadow:0 3px 12px rgba(76,110,245,.22)}
+    @media (max-width: 1180px){
+      .header-badge{margin-left:0;min-width:100%;width:100%}
+      .switch-board{width:100%}
+    }
+    @media (max-width: 720px){
+      .switch-row{flex-direction:column;align-items:flex-start;gap:8px}
+      .switch-track{width:100%;border-radius:22px}
+      .switch-option{flex:0 0 auto}
+    }
+
+
+    /* ===== 修正：两级切换固定在右上角，而不是掉到左侧下一行 ===== */
+    .app-container{
+      max-width: 1680px;
+    }
+    .app-header{
+      display:grid !important;
+      grid-template-columns: 36px minmax(340px, 1fr) minmax(560px, 760px);
+      grid-template-areas: "icon title switch";
+      align-items:start;
+      column-gap:14px;
+      row-gap:10px;
+      flex-wrap:nowrap !important;
+    }
+    .header-icon{grid-area:icon;}
+    .header-text{grid-area:title;min-width:0;}
+    .header-badge{
+      grid-area:switch;
+      width:100%;
+      min-width:0 !important;
+      margin-left:0 !important;
+      justify-content:flex-end;
+      align-self:start;
+    }
+    .switch-board{
+      width:100%;
+      max-width:760px;
+      margin-left:auto;
+      gap:10px;
+    }
+    .switch-row{
+      justify-content:flex-end;
+    }
+    .switch-track{
+      flex:1 1 auto;
+      min-width:0;
+      justify-content:flex-start;
+      flex-wrap:nowrap;
+      overflow:hidden;
+    }
+    .switch-option{
+      padding:9px 16px;
+      min-height:36px;
+      font-size:.86rem;
+    }
+    @media (max-width: 1260px){
+      .app-header{
+        grid-template-columns:36px minmax(300px,1fr) minmax(480px,620px);
+      }
+      .switch-option{padding:8px 12px;font-size:.8rem;}
+      .switch-row{gap:10px;}
+      .switch-label{font-size:.86rem;}
+    }
+    @media (max-width: 980px){
+      .app-header{
+        grid-template-columns:36px 1fr;
+        grid-template-areas:"icon title" "switch switch";
+      }
+      .header-badge{width:100%;}
+      .switch-board{max-width:none;width:100%;margin-left:0;}
+      .switch-row{justify-content:flex-start;}
+      .switch-track{flex-wrap:wrap;overflow:visible;}
+    }
+
+
+
+    /* ===== 布局修正：右上角两级切换保持紧凑靠右，匹配图1 ===== */
+    .app-container{
+      max-width: 1680px;
+    }
+    .app-header{
+      display:grid !important;
+      grid-template-columns: 36px minmax(520px, 1fr) 700px !important;
+      grid-template-areas: "icon title switch" !important;
+      align-items:start !important;
+      column-gap:18px !important;
+      row-gap:0 !important;
+      flex-wrap:nowrap !important;
+      min-height: 164px;
+    }
+    .header-icon{
+      grid-area:icon !important;
+      align-self:center;
+    }
+    .header-text{
+      grid-area:title !important;
+      align-self:center;
+      min-width:0;
+    }
+    .header-badge{
+      grid-area:switch !important;
+      width:700px !important;
+      min-width:700px !important;
+      max-width:700px !important;
+      margin-left:0 !important;
+      justify-self:end !important;
+      align-self:start !important;
+      display:flex !important;
+      justify-content:flex-end !important;
+      align-items:flex-start !important;
+    }
+    .switch-board{
+      width:700px !important;
+      max-width:700px !important;
+      margin-left:auto !important;
+      gap:22px !important;
+    }
+    .switch-row{
+      width:100%;
+      justify-content:flex-end !important;
+      gap:14px !important;
+    }
+    .switch-label{
+      flex:0 0 44px !important;
+      text-align:right;
+      font-size:.96rem !important;
+    }
+    .switch-track{
+      flex:0 0 620px !important;
+      width:620px !important;
+      max-width:620px !important;
+      justify-content:space-between !important;
+      flex-wrap:nowrap !important;
+      overflow:hidden !important;
+      padding:6px !important;
+    }
+    .switch-option{
+      flex:1 1 0 !important;
+      text-align:center;
+      padding:9px 12px !important;
+      min-height:38px !important;
+      font-size:.86rem !important;
+    }
+    @media (max-width: 1360px){
+      .app-header{
+        grid-template-columns:36px minmax(420px,1fr) 620px !important;
+      }
+      .header-badge{width:620px !important;min-width:620px !important;max-width:620px !important;}
+      .switch-board{width:620px !important;max-width:620px !important;}
+      .switch-label{flex-basis:40px !important;font-size:.88rem !important;}
+      .switch-track{flex-basis:560px !important;width:560px !important;max-width:560px !important;}
+      .switch-option{font-size:.8rem !important;padding:8px 8px !important;}
+    }
+    @media (max-width: 1120px){
+      .app-header{
+        grid-template-columns:36px 1fr !important;
+        grid-template-areas:"icon title" "switch switch" !important;
+        min-height:auto;
+        row-gap:14px !important;
+      }
+      .header-text{align-self:center;}
+      .header-badge{width:100% !important;min-width:0 !important;max-width:none !important;justify-self:stretch !important;}
+      .switch-board{width:100% !important;max-width:none !important;}
+      .switch-row{justify-content:flex-start !important;}
+      .switch-track{flex:1 1 auto !important;width:auto !important;max-width:none !important;}
+    }
+
+
+
+    /* ===== 最终修正：右上角切换区缩小并限制在界面内部 ===== */
+    .app-container{
+      max-width: 1480px !important;
+      overflow: hidden;
+    }
+    .app-header{
+      display:grid !important;
+      grid-template-columns: 36px minmax(320px, 1fr) minmax(390px, 520px) !important;
+      grid-template-areas:"icon title switch" !important;
+      align-items:center !important;
+      column-gap:14px !important;
+      row-gap:8px !important;
+      min-height: 112px !important;
+      flex-wrap:nowrap !important;
+    }
+    .header-icon{
+      grid-area:icon !important;
+      align-self:center !important;
+    }
+    .header-text{
+      grid-area:title !important;
+      align-self:center !important;
+      min-width:0 !important;
+    }
+    .header-text h1{
+      font-size:1.02rem !important;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .subtitle{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .header-badge{
+      grid-area:switch !important;
+      width:100% !important;
+      min-width:0 !important;
+      max-width:520px !important;
+      margin-left:0 !important;
+      justify-self:end !important;
+      align-self:center !important;
+      display:flex !important;
+      justify-content:flex-end !important;
+      align-items:center !important;
+      overflow:hidden !important;
+    }
+    .switch-board{
+      width:100% !important;
+      max-width:520px !important;
+      min-width:0 !important;
+      margin-left:auto !important;
+      gap:10px !important;
+    }
+    .switch-row{
+      width:100% !important;
+      justify-content:flex-end !important;
+      gap:8px !important;
+      min-width:0 !important;
+    }
+    .switch-label{
+      flex:0 0 34px !important;
+      text-align:right !important;
+      font-size:.78rem !important;
+      font-weight:900 !important;
+    }
+    .switch-track{
+      flex:1 1 auto !important;
+      width:auto !important;
+      max-width:470px !important;
+      min-width:0 !important;
+      justify-content:space-between !important;
+      flex-wrap:nowrap !important;
+      overflow:hidden !important;
+      padding:4px !important;
+      border-radius:999px !important;
+    }
+    .switch-option{
+      flex:1 1 0 !important;
+      min-width:0 !important;
+      text-align:center !important;
+      padding:6px 8px !important;
+      min-height:30px !important;
+      font-size:.72rem !important;
+      line-height:1.1 !important;
+      border-radius:999px !important;
+    }
+    @media (max-width: 1120px){
+      .app-header{
+        grid-template-columns:36px 1fr !important;
+        grid-template-areas:"icon title" "switch switch" !important;
+        min-height:auto !important;
+        row-gap:12px !important;
+      }
+      .header-text h1,.subtitle{
+        white-space:normal;
+        overflow:visible;
+        text-overflow:clip;
+      }
+      .header-badge{
+        width:100% !important;
+        max-width:none !important;
+        justify-self:stretch !important;
+        justify-content:flex-end !important;
+      }
+      .switch-board{
+        width:min(100%,520px) !important;
+        max-width:520px !important;
+      }
+    }
+    @media (max-width: 640px){
+      .switch-board{width:100% !important;max-width:none !important;}
+      .switch-row{gap:6px !important;}
+      .switch-label{flex-basis:32px !important;font-size:.72rem !important;}
+      .switch-track{max-width:none !important;overflow-x:auto !important;justify-content:flex-start !important;}
+      .switch-option{flex:0 0 auto !important;padding:6px 10px !important;}
+    }
+
+
+
+    /* ===== 统一类别 / 款式切换按钮尺寸 ===== */
+    #categorySwitch,
+    #styleSwitch{
+      height:40px !important;
+      min-height:40px !important;
+      max-height:40px !important;
+      align-items:center !important;
+    }
+    #categorySwitch .switch-option,
+    #styleSwitch .switch-option{
+      flex:1 1 0 !important;
+      height:32px !important;
+      min-height:32px !important;
+      max-height:32px !important;
+      padding:0 8px !important;
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      line-height:1 !important;
+      font-size:.72rem !important;
+      border-radius:999px !important;
+      box-sizing:border-box !important;
+    }
+    #categorySwitch .switch-option.active,
+    #styleSwitch .switch-option.active{
+      height:32px !important;
+      min-height:32px !important;
+      max-height:32px !important;
+      padding:0 8px !important;
+    }
+    @media (max-width:640px){
+      #categorySwitch .switch-option,
+      #styleSwitch .switch-option{
+        flex:0 0 auto !important;
+        height:32px !important;
+        min-height:32px !important;
+        padding:0 10px !important;
+      }
+    }
+
+
+
+    /* ===== 一屏可见修正：压缩右上角“类别 / 款式”高度 ===== */
+    .app-header{
+      min-height:74px !important;
+      margin-bottom:10px !important;
+      padding-bottom:10px !important;
+      align-items:center !important;
+      row-gap:4px !important;
+    }
+    .header-icon{
+      width:30px !important;
+      height:30px !important;
+      border-radius:10px !important;
+    }
+    .header-icon svg{
+      width:16px !important;
+      height:16px !important;
+    }
+    .header-text h1{
+      font-size:.94rem !important;
+      line-height:1.15 !important;
+    }
+    .subtitle{
+      font-size:.66rem !important;
+      margin-top:2px !important;
+      line-height:1.15 !important;
+    }
+    .switch-board{
+      gap:5px !important;
+      max-width:500px !important;
+    }
+    .switch-row{
+      gap:6px !important;
+      min-height:30px !important;
+    }
+    .switch-label{
+      flex-basis:30px !important;
+      font-size:.68rem !important;
+      line-height:1 !important;
+    }
+    .switch-track,
+    #categorySwitch,
+    #styleSwitch{
+      height:30px !important;
+      min-height:30px !important;
+      max-height:30px !important;
+      padding:3px !important;
+      gap:3px !important;
+    }
+    .switch-option,
+    #categorySwitch .switch-option,
+    #styleSwitch .switch-option,
+    #categorySwitch .switch-option.active,
+    #styleSwitch .switch-option.active{
+      height:24px !important;
+      min-height:24px !important;
+      max-height:24px !important;
+      padding:0 7px !important;
+      font-size:.66rem !important;
+      line-height:1 !important;
+      border-radius:999px !important;
+    }
+    .main-layout{
+      margin-bottom:10px !important;
+    }
+    .panel-card{
+      padding:12px 12px 14px !important;
+      gap:8px !important;
+    }
+    .checkerboard-bg{
+      width:280px !important;
+      height:280px !important;
+    }
+    .control-board{
+      padding:10px !important;
+    }
+    .action-row{
+      margin-top:8px !important;
+    }
+    .action-row .btn{
+      min-height:38px !important;
+    }
+
+
+
+    /* ===== 微调：上移类别/款式切换区并放大切换文字 ===== */
+    .header-badge{
+      align-self:start !important;
+      transform:translateY(-6px) !important;
+    }
+    .switch-board{
+      transform:translateY(-2px) !important;
+    }
+    .switch-label{
+      font-size:.78rem !important;
+      font-weight:900 !important;
+    }
+    .switch-option,
+    #categorySwitch .switch-option,
+    #styleSwitch .switch-option,
+    #categorySwitch .switch-option.active,
+    #styleSwitch .switch-option.active{
+      font-size:.76rem !important;
+      font-weight:900 !important;
+    }
+    @media (max-width:640px){
+      .header-badge,
+      .switch-board{transform:none !important;}
+      .switch-label{font-size:.74rem !important;}
+      .switch-option,
+      #categorySwitch .switch-option,
+      #styleSwitch .switch-option{font-size:.72rem !important;}
+    }
+
+
+
+    /* ===== 简易T恤：隐藏底色功能，剩余三个功能平分 ===== */
+    .control-grid.simple-tee-mode {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+    .control-grid.simple-tee-mode #bookGroup {
+      display: none !important;
+    }
+    @media (max-width: 980px) {
+      .control-grid.simple-tee-mode {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+    @media (max-width: 900px) {
+      .control-grid.simple-tee-mode {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+
+
+    /* ===== 修复：礼帽三色底色区过高，压缩到与其他款式控制区接近 ===== */
+    .book-color-stack.top-hat-vertical {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(3, 34px) !important;
+      gap: 6px !important;
+      flex: 0 0 auto !important;
+      align-content: start;
+    }
+    .book-color-stack.top-hat-vertical .book-color-field {
+      min-height: 34px !important;
+      height: 34px !important;
+      padding: 4px 10px !important;
+      border-radius: 10px;
+      font-size: .68rem !important;
+      line-height: 1;
+    }
+    .book-color-stack.top-hat-vertical .book-color-field input[type=color] {
+      width: 42px !important;
+      height: 24px !important;
+    }
+
+
+
+    /* ===== 仅放大左上角标题字号，不调整其他区域布局 ===== */
+    #toolTitle {
+      font-size: 1.28rem !important;
+      line-height: 1.15 !important;
+    }
+
+</style>
+</head>
+<body>
+<div class="app-container">
+<div class="app-header">
+<div class="header-icon"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><rect height="18" rx="2" width="18" x="3" y="3"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
+<div class="header-text"><h1 id="toolTitle">《朋友收集梦想生活》服装图片生成工具</h1><p class="subtitle">点击正/背面区域导入图片 → 调整显示区域 → 导出 256×256 PNG</p></div>
+<div class="header-badge">
+<div class="switch-board">
+<div class="switch-row">
+<span class="switch-label">类别</span>
+<div aria-label="类别选择" class="switch-track" id="categorySwitch" role="group"></div>
+</div>
+<div class="switch-row">
+<span class="switch-label">款式</span>
+<div aria-label="款式选择" class="switch-track" id="styleSwitch" role="group"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="main-layout">
+<div class="panel-card" id="editPanel">
+<div class="panel-header"><span class="panel-dot edit"></span><span class="panel-title">编辑区域</span><span class="panel-hint" id="editPanelHint">256 × 256 · 正/背面分区可编辑</span></div>
+<div class="checkerboard-bg edit-bg" id="editCheckerboard"><div class="canvas-wrapper edit-wrapper" id="editWrapper"><canvas height="256" id="editCanvas" width="256"></canvas><div class="no-image-placeholder" id="noImagePlaceholder"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 24 24"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path><line x1="16" x2="22" y1="5" y2="5"></line><line x1="19" x2="19" y1="2" y2="8"></line><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg><span class="text">点击画布导入图片</span></div></div></div>
+</div>
+</div>
+<div class="control-board">
+<div class="control-grid">
+<div class="control-group book-group" id="bookGroup"><div class="book-head"><div class="control-group-title" id="bookGroupTitle">底色</div><div class="book-active-hint" id="bookActiveHint">当前编辑：衣服正面</div></div><div class="book-color-stack" id="bookColorStack"><label class="book-color-field" id="colorFieldRed"><span id="labelRed">正面底色</span><input id="bookRedColor" type="color" value="#D42B00"/></label><label class="book-color-field" id="colorFieldGreen"><span id="labelGreen">背面底色</span><input id="bookGreenColor" type="color" value="#91D21C"/></label><label class="book-color-field extra-book-field" id="colorFieldBlue" style="display:none;"><span id="labelBlue">左袖</span><input id="bookBlueColor" type="color" value="#004CBF"/></label><label class="book-color-field extra-book-field" id="colorFieldPurple" style="display:none;"><span id="labelPurple">右袖</span><input id="bookPurpleColor" type="color" value="#6500C3"/></label></div></div>
+<div class="control-group nudge-group"><div class="control-group-title">微调移动</div><div aria-label="微调移动控制" class="global-nudge-pad"><button class="btn btn-ghost btn-icon global-nudge-btn nudge-up" id="btnGlobalNudgeUp" title="向上微调" type="button">↑</button><button class="btn btn-ghost btn-icon global-nudge-btn nudge-left" id="btnGlobalNudgeLeft" title="向左微调" type="button">←</button><span class="nudge-center">微调</span><button class="btn btn-ghost btn-icon global-nudge-btn nudge-right" id="btnGlobalNudgeRight" title="向右微调" type="button">→</button><button class="btn btn-ghost btn-icon global-nudge-btn nudge-down" id="btnGlobalNudgeDown" title="向下微调" type="button">↓</button></div></div>
+<div class="control-group zoom-group"><div class="control-group-title">缩放与适配</div><div class="filter-controls"><div class="filter-row"><span class="filter-label">缩放</span><button class="btn btn-ghost btn-icon" id="btnZoomOut" title="缩小">−</button><input class="filter-slider" id="zoomSlider" max="500" min="5" step="1" type="range" value="100"/><button class="btn btn-ghost btn-icon" id="btnZoomIn" title="放大">＋</button><span class="filter-value" id="zoomDisplay">100%</span></div><div class="zoom-actions"><button class="btn btn-ghost btn-xs" id="btnFit">适应</button><button class="btn btn-ghost btn-xs" id="btnFill">填充</button><button class="btn btn-ghost btn-xs" id="btnActualSize">原始</button><button class="btn btn-ghost btn-xs" id="btnReset">居中</button></div></div></div>
+<div class="control-group filter-group"><div class="control-group-title">参数调节</div><div class="filter-controls"><div class="filter-row"><span class="filter-label">亮度</span><button class="btn btn-ghost btn-icon filter-step" data-delta="-1" data-target="slBrightness" data-val="valBrightness">−</button><input class="filter-slider" id="slBrightness" max="200" min="0" step="1" type="range" value="100"/><button class="btn btn-ghost btn-icon filter-step" data-delta="1" data-target="slBrightness" data-val="valBrightness">＋</button><span class="filter-value" id="valBrightness">100%</span></div><div class="filter-row"><span class="filter-label">对比</span><button class="btn btn-ghost btn-icon filter-step" data-delta="-1" data-target="slContrast" data-val="valContrast">−</button><input class="filter-slider" id="slContrast" max="200" min="0" step="1" type="range" value="100"/><button class="btn btn-ghost btn-icon filter-step" data-delta="1" data-target="slContrast" data-val="valContrast">＋</button><span class="filter-value" id="valContrast">100%</span></div><div class="filter-row"><span class="filter-label">饱和</span><button class="btn btn-ghost btn-icon filter-step" data-delta="-1" data-target="slSaturation" data-val="valSaturation">−</button><input class="filter-slider" id="slSaturation" max="200" min="0" step="1" type="range" value="100"/><button class="btn btn-ghost btn-icon filter-step" data-delta="1" data-target="slSaturation" data-val="valSaturation">＋</button><span class="filter-value" id="valSaturation">100%</span></div></div></div>
+</div>
+<div class="action-row"><button class="btn btn-primary btn-md" id="btnImport" type="button">↥ 导入图片</button><button class="btn btn-green btn-md" id="btnExport" type="button">↧ 导出 PNG</button></div>
+<input accept="image/*" id="fileInput" style="display:none;" type="file"/>
+</div>
+<div class="bottom-hint"><span id="bottomHintText">点击空白区域导入图片 · 点击另一侧切换正/背面 · 已导入后拖拽/滚轮缩放</span><span class="kbd">Ctrl+S</span> 导出</div>
+</div>
+<div class="toast" id="toast"></div>
+
+
+<script>
+(() => {
+  const CANVAS_SIZE = 256;
+  const DEFAULT_COLORS = { red: '#D42B00', green: '#91D21C', blue: '#004CBF', purple: '#6500C3', full: '#000000' };
+
+  function twoRegionMode(category, itemName, filePrefix) {
+    return {
+      category,
+      itemName,
+      colorPanelTitle: '底色',
+      regionKeys: ['red', 'green'],
+      colorLabels: { red: '正面', green: '背面' },
+      activeLabels: { red: '正面', green: '背面' },
+      editHint: '256 × 256 · 正/背面分区可编辑',
+      bottomHint: '点击不同区域切换并导入图片 · 已导入后可拖拽 / 滚轮缩放 / 微调',
+      filePrefix
+    };
+  }
+
+  function fourRegionMode(category, itemName, filePrefix) {
+    return {
+      category,
+      itemName,
+      colorPanelTitle: '底色',
+      regionKeys: ['red', 'green', 'blue', 'purple'],
+      colorLabels: { red: '正面', green: '背面', blue: '左袖', purple: '右袖' },
+      activeLabels: { red: '正面', green: '背面', blue: '左袖', purple: '右袖' },
+      editHint: '256 × 256 · 正 / 背 / 左袖 / 右袖分区可编辑',
+      bottomHint: '点击不同区域切换并导入图片 · 已导入后可拖拽 / 滚轮缩放 / 微调',
+      filePrefix
+    };
+  }
+
+  function fullRegionMode(category, itemName, filePrefix) {
+    return {
+      category,
+      itemName,
+      colorPanelTitle: '',
+      regionKeys: ['full'],
+      colorLabels: {},
+      activeLabels: { full: '整体' },
+      editHint: '256 × 256 · 整个区域可编辑',
+      bottomHint: '点击画布导入图片 · 已导入后可拖拽 / 滚轮缩放 / 微调',
+      filePrefix,
+      hideColorPanel: true,
+      useBaseFill: false
+    };
+  }
+
+  const CATEGORY_CONFIGS = {
+    tops: { label: '上衣', styles: ['simpleTee', 'tankTop', 'shortSleeveTop', 'longSleeveTop'] },
+    skirts: { label: '裙子', styles: ['sleevelessDress', 'shortSleeveDress', 'longSleeveDress', 'robe', 'gown'] },
+    bottoms: { label: '下装', styles: ['shortSkirt', 'longSkirt', 'shorts', 'longBottom'] },
+    hats: { label: '帽子', styles: ['baseballCap', 'knitCap', 'topHat'] }
+  };
+
+  const MODE_CONFIGS = {
+    simpleTee: fullRegionMode('tops', '简易T恤', 'simple-tee'),
+    tankTop: twoRegionMode('tops', '坦克背心', 'tank-top'),
+    shortSleeveTop: fourRegionMode('tops', '短袖T恤', 'short-sleeve-top'),
+    longSleeveTop: fourRegionMode('tops', '长袖T恤', 'long-sleeve-top'),
+
+    sleevelessDress: twoRegionMode('skirts', '无袖连衣裙', 'sleeveless-dress'),
+    shortSleeveDress: fourRegionMode('skirts', '短袖连衣裙', 'short-sleeve-dress'),
+    longSleeveDress: fourRegionMode('skirts', '长袖连衣裙', 'long-sleeve-dress'),
+    robe: fourRegionMode('skirts', '长袍', 'robe'),
+    gown: fourRegionMode('skirts', '礼服', 'gown'),
+
+    shortSkirt: twoRegionMode('bottoms', '半身短裙', 'short-skirt'),
+    longSkirt: twoRegionMode('bottoms', '半身长裙', 'long-skirt'),
+    shorts: twoRegionMode('bottoms', '短裤', 'shorts'),
+    longBottom: twoRegionMode('bottoms', '长裤', 'long-bottom'),
+
+    baseballCap: {
+      category: 'hats',
+      itemName: '鸭舌帽',
+      colorPanelTitle: '底色',
+      regionKeys: ['red', 'green', 'blue', 'purple'],
+      colorLabels: { red: '前片', green: '帽舌', blue: '左后', purple: '右后' },
+      activeLabels: { red: '前片', green: '帽舌', blue: '左后', purple: '右后' },
+      editHint: '256 × 256 · 前片 / 帽舌 / 左后 / 右后分区可编辑',
+      bottomHint: '点击不同区域切换并导入图片 · 已导入后可拖拽 / 滚轮缩放 / 微调',
+      filePrefix: 'baseball-cap'
+    },
+    knitCap: twoRegionMode('hats', '针织帽', 'knit-cap'),
+    topHat: {
+      category: 'hats',
+      itemName: '礼帽',
+      colorPanelTitle: '底色',
+      regionKeys: ['red', 'green', 'blue'],
+      colorLabels: { red: '帽顶', green: '帽身', blue: '帽檐' },
+      activeLabels: { red: '帽顶', green: '帽身', blue: '帽檐' },
+      editHint: '256 × 256 · 帽顶 / 帽身 / 帽檐分区可编辑',
+      bottomHint: '点击不同区域切换并导入图片 · 已导入后可拖拽 / 滚轮缩放 / 微调',
+      filePrefix: 'top-hat'
+    }
+  };
+
+  const REGION_DEFS = {
+    red: {
+      bounds: { x: 1, y: 0, w: 126, h: 148 },
+      groups: [[0,5,[[14,41],[87,114]]],[6,9,[[14,42],[86,114]]],[10,11,[[14,43],[85,114]]],[12,13,[[14,44],[84,114]]],[14,14,[[14,45],[83,114]]],[15,15,[[14,46],[82,114]]],[16,16,[[14,47],[81,114]]],[17,17,[[14,48],[80,114]]],[18,18,[[14,49],[79,114]]],[19,19,[[14,51],[77,114]]],[20,20,[[14,54],[74,114]]],[21,21,[[14,57],[71,114]]],[22,53,[[14,114]]],[54,56,[[13,115]]],[57,58,[[12,116]]],[59,59,[[11,117]]],[60,60,[[10,118]]],[61,61,[[9,119]]],[62,62,[[7,121]]],[63,63,[[5,123]]],[64,64,[[3,125]]],[65,147,[[1,127]]]]
+    },
+    green: {
+      bounds: { x: 129, y: 0, w: 126, h: 148 },
+      groups: [[0,1,[[142,169],[215,242]]],[2,4,[[142,170],[214,242]]],[5,6,[[142,171],[213,242]]],[7,7,[[142,172],[212,242]]],[8,8,[[142,173],[211,242]]],[9,9,[[142,174],[210,242]]],[10,10,[[142,175],[209,242]]],[11,11,[[142,177],[207,242]]],[12,12,[[142,180],[204,242]]],[13,13,[[142,185],[199,242]]],[14,53,[[142,242]]],[54,56,[[141,243]]],[57,58,[[140,244]]],[59,59,[[139,245]]],[60,60,[[138,246]]],[61,61,[[137,247]]],[62,62,[[135,249]]],[63,63,[[133,251]]],[64,64,[[131,253]]],[65,147,[[129,255]]]]
+    },
+    redDress: {
+      bounds: { x: 2, y: 0, w: 124, h: 174 },
+      groups: [[0,7,[[14,40],[88,114]]],[8,13,[[14,42],[86,114]]],[14,15,[[14,44],[84,114]]],[16,17,[[14,46],[82,114]]],[18,19,[[14,48],[80,114]]],[20,21,[[14,52],[76,114]]],[22,57,[[14,114]]],[58,61,[[12,116]]],[62,63,[[8,120]]],[64,65,[[4,124]]],[66,173,[[2,126]]]]
+    },
+    greenDress: {
+      bounds: { x: 130, y: 0, w: 124, h: 174 },
+      groups: [[0,3,[[142,168],[216,242]]],[4,7,[[142,170],[214,242]]],[8,9,[[142,172],[212,242]]],[10,11,[[142,174],[210,242]]],[12,13,[[142,178],[206,242]]],[14,57,[[142,242]]],[58,61,[[140,244]]],[62,63,[[136,248]]],[64,65,[[132,252]]],[66,173,[[130,254]]]]
+    },
+    redShortDress: {
+      bounds: { x: 1, y: 0, w: 126, h: 174 },
+      groups: [[0,5,[[14,41],[87,114]]],[6,9,[[14,42],[86,114]]],[10,11,[[14,43],[85,114]]],[12,13,[[14,44],[84,114]]],[14,14,[[14,45],[83,114]]],[15,15,[[14,46],[82,114]]],[16,16,[[14,47],[81,114]]],[17,17,[[14,48],[80,114]]],[18,18,[[14,49],[79,114]]],[19,19,[[14,51],[77,114]]],[20,20,[[14,54],[74,114]]],[21,21,[[14,57],[71,114]]],[22,53,[[14,114]]],[54,56,[[13,115]]],[57,58,[[12,116]]],[59,59,[[11,117]]],[60,60,[[10,118]]],[61,61,[[9,119]]],[62,62,[[7,121]]],[63,63,[[5,123]]],[64,64,[[3,125]]],[65,173,[[1,127]]]]
+    },
+    greenShortDress: {
+      bounds: { x: 129, y: 0, w: 126, h: 174 },
+      groups: [[0,1,[[142,169],[215,242]]],[2,4,[[142,170],[214,242]]],[5,6,[[142,171],[213,242]]],[7,7,[[142,172],[212,242]]],[8,8,[[142,173],[211,242]]],[9,9,[[142,174],[210,242]]],[10,10,[[142,175],[209,242]]],[11,11,[[142,177],[207,242]]],[12,12,[[142,180],[204,242]]],[13,13,[[142,185],[199,242]]],[14,53,[[142,242]]],[54,56,[[141,243]]],[57,58,[[140,244]]],[59,59,[[139,245]]],[60,60,[[138,246]]],[61,61,[[137,247]]],[62,62,[[135,249]]],[63,63,[[133,251]]],[64,64,[[131,253]]],[65,173,[[129,255]]]]
+    },
+    blueShortDress: {
+      bounds: { x: 1, y: 194, w: 126, h: 62 },
+      groups: [[194,255,[[1,127]]]]
+    },
+    purpleShortDress: {
+      bounds: { x: 129, y: 194, w: 126, h: 62 },
+      groups: [[194,255,[[129,255]]]]
+    },
+    redLongDress: {
+      bounds: { x: 1, y: 0, w: 126, h: 174 },
+      groups: [[0,5,[[14,41],[87,114]]],[6,9,[[14,42],[86,114]]],[10,11,[[14,43],[85,114]]],[12,13,[[14,44],[84,114]]],[14,14,[[14,45],[83,114]]],[15,15,[[14,46],[82,114]]],[16,16,[[14,47],[81,114]]],[17,17,[[14,48],[80,114]]],[18,18,[[14,49],[79,114]]],[19,19,[[14,51],[77,114]]],[20,20,[[14,54],[74,114]]],[21,21,[[14,57],[71,114]]],[22,53,[[14,114]]],[54,56,[[13,115]]],[57,58,[[12,116]]],[59,59,[[11,117]]],[60,60,[[10,118]]],[61,61,[[9,119]]],[62,62,[[7,121]]],[63,63,[[5,123]]],[64,64,[[3,125]]],[65,173,[[1,127]]]]
+    },
+    greenLongDress: {
+      bounds: { x: 129, y: 0, w: 126, h: 174 },
+      groups: [[0,1,[[142,169],[215,242]]],[2,4,[[142,170],[214,242]]],[5,6,[[142,171],[213,242]]],[7,7,[[142,172],[212,242]]],[8,8,[[142,173],[211,242]]],[9,9,[[142,174],[210,242]]],[10,10,[[142,175],[209,242]]],[11,11,[[142,177],[207,242]]],[12,12,[[142,180],[204,242]]],[13,13,[[142,185],[199,242]]],[14,53,[[142,242]]],[54,56,[[141,243]]],[57,58,[[140,244]]],[59,59,[[139,245]]],[60,60,[[138,246]]],[61,61,[[137,247]]],[62,62,[[135,249]]],[63,63,[[133,251]]],[64,64,[[131,253]]],[65,173,[[129,255]]]]
+    },
+    blueLongDress: {
+      bounds: { x: 22, y: 176, w: 84, h: 80 },
+      groups: [[176,255,[[22,106]]]]
+    },
+    purpleLongDress: {
+      bounds: { x: 150, y: 176, w: 84, h: 80 },
+      groups: [[176,255,[[150,234]]]]
+    },
+    redRobe: {
+      bounds: { x: 19, y: 0, w: 90, h: 178 },
+      groups: [[0,2,[[28,51],[77,100]]],[3,4,[[28,52],[76,100]]],[5,6,[[28,53],[75,100]]],[7,7,[[28,54],[74,100]]],[8,8,[[28,55],[73,100]]],[9,9,[[28,56],[72,100]]],[10,10,[[28,57],[71,100]]],[11,11,[[28,58],[70,100]]],[12,12,[[28,59],[69,100]]],[13,13,[[28,60],[68,100]]],[14,14,[[28,61],[67,100]]],[15,15,[[28,62],[66,100]]],[16,37,[[28,100]]],[38,39,[[27,101]]],[40,41,[[26,102]]],[42,42,[[25,103]]],[43,43,[[24,104]]],[44,44,[[22,106]]],[45,177,[[19,109]]]]
+    },
+    greenRobe: {
+      bounds: { x: 147, y: 0, w: 90, h: 178 },
+      groups: [[0,0,[[156,179],[205,228]]],[1,1,[[156,180],[204,228]]],[2,2,[[156,181],[203,228]]],[3,3,[[156,182],[202,228]]],[4,4,[[156,184],[200,228]]],[5,5,[[156,187],[197,228]]],[6,37,[[156,228]]],[38,39,[[155,229]]],[40,41,[[154,230]]],[42,42,[[153,231]]],[43,43,[[152,232]]],[44,44,[[150,234]]],[45,177,[[147,237]]]]
+    },
+    blueRobe: {
+      bounds: { x: 1, y: 180, w: 126, h: 76 },
+      groups: [[180,181,[[29,99]]],[182,183,[[28,100]]],[184,184,[[27,101]]],[185,185,[[26,102]]],[186,186,[[25,103]]],[187,187,[[23,105]]],[188,188,[[22,106]]],[189,189,[[21,107]]],[190,190,[[20,108]]],[191,191,[[19,109]]],[192,192,[[17,111]]],[193,193,[[16,112]]],[194,194,[[15,113]]],[195,195,[[14,114]]],[196,196,[[13,115]]],[197,197,[[12,116]]],[198,198,[[11,117]]],[199,199,[[10,118]]],[200,200,[[9,119]]],[201,202,[[8,120]]],[203,204,[[7,121]]],[205,206,[[6,122]]],[207,209,[[5,123]]],[210,213,[[4,124]]],[214,217,[[3,125]]],[218,223,[[2,126]]],[224,255,[[1,127]]]]
+    },
+    purpleRobe: {
+      bounds: { x: 129, y: 180, w: 126, h: 76 },
+      groups: [[180,181,[[157,227]]],[182,183,[[156,228]]],[184,184,[[155,229]]],[185,185,[[154,230]]],[186,186,[[153,231]]],[187,187,[[151,233]]],[188,188,[[150,234]]],[189,189,[[149,235]]],[190,190,[[148,236]]],[191,191,[[147,237]]],[192,192,[[145,239]]],[193,193,[[144,240]]],[194,194,[[143,241]]],[195,195,[[142,242]]],[196,196,[[141,243]]],[197,197,[[140,244]]],[198,198,[[139,245]]],[199,199,[[138,246]]],[200,200,[[137,247]]],[201,202,[[136,248]]],[203,204,[[135,249]]],[205,206,[[134,250]]],[207,209,[[133,251]]],[210,213,[[132,252]]],[214,217,[[131,253]]],[218,223,[[130,254]]],[224,255,[[129,255]]]]
+    },
+    redGown: {
+      bounds: { x: 1, y: 0, w: 126, h: 201 },
+      groups: [[0,7,[[23,35],[93,105]]],[8,13,[[23,36],[92,105]]],[14,17,[[23,37],[91,105]]],[18,19,[[23,38],[90,105]]],[20,21,[[23,39],[89,105]]],[22,22,[[23,40],[88,105]]],[23,23,[[23,41],[87,105]]],[24,24,[[23,42],[86,105]]],[25,25,[[23,43],[85,105]]],[26,26,[[23,45],[83,105]]],[27,27,[[23,47],[81,105]]],[28,28,[[23,49],[79,105]]],[29,29,[[23,53],[75,105]]],[30,41,[[23,105]]],[42,45,[[22,106]]],[46,48,[[21,107]]],[49,51,[[20,108]]],[52,53,[[19,109]]],[54,54,[[18,110]]],[55,55,[[17,111]]],[56,56,[[16,112]]],[57,57,[[15,113]]],[58,58,[[13,115]]],[59,59,[[11,117]]],[60,60,[[8,120]]],[61,61,[[5,123]]],[62,200,[[1,127]]]]
+    },
+    greenGown: {
+      bounds: { x: 129, y: 0, w: 126, h: 201 },
+      groups: [[0,2,[[151,163],[221,233]]],[3,4,[[151,164],[220,233]]],[5,6,[[151,165],[219,233]]],[7,8,[[151,166],[218,233]]],[9,9,[[151,167],[217,233]]],[10,10,[[151,168],[216,233]]],[11,11,[[151,169],[215,233]]],[12,12,[[151,170],[214,233]]],[13,13,[[151,171],[213,233]]],[14,14,[[151,172],[212,233]]],[15,15,[[151,174],[210,233]]],[16,16,[[151,175],[209,233]]],[17,17,[[151,177],[207,233]]],[18,18,[[151,179],[205,233]]],[19,19,[[151,182],[202,233]]],[20,20,[[151,186],[198,233]]],[21,41,[[151,233]]],[42,45,[[150,234]]],[46,48,[[149,235]]],[49,51,[[148,236]]],[52,53,[[147,237]]],[54,54,[[146,238]]],[55,55,[[145,239]]],[56,56,[[144,240]]],[57,57,[[143,241]]],[58,58,[[141,243]]],[59,59,[[139,245]]],[60,60,[[136,248]]],[61,61,[[133,251]]],[62,200,[[129,255]]]]
+    },
+    blueGown: {
+      bounds: { x: 1, y: 203, w: 126, h: 52 },
+      groups: [[203,203,[[44,84]]],[204,204,[[32,96]]],[205,205,[[27,101]]],[206,206,[[23,105]]],[207,207,[[20,108]]],[208,208,[[18,110]]],[209,209,[[16,112]]],[210,210,[[14,114]]],[211,254,[[1,127]]]]
+    },
+    purpleGown: {
+      bounds: { x: 129, y: 203, w: 126, h: 52 },
+      groups: [[203,203,[[172,212]]],[204,204,[[160,224]]],[205,205,[[155,229]]],[206,206,[[151,233]]],[207,207,[[148,236]]],[208,208,[[146,238]]],[209,209,[[144,240]]],[210,210,[[142,242]]],[211,254,[[129,255]]]]
+    },
+    redShortSkirt: {
+      bounds: { x: 1, y: 0, w: 126, h: 67 },
+      groups: [[0,66,[[1,127]]]]
+    },
+    greenShortSkirt: {
+      bounds: { x: 129, y: 0, w: 126, h: 67 },
+      groups: [[0,66,[[129,255]]]]
+    },
+    redLongSkirt: {
+      bounds: { x: 1, y: 0, w: 126, h: 111 },
+      groups: [[0,110,[[1,127]]]]
+    },
+    greenLongSkirt: {
+      bounds: { x: 129, y: 0, w: 126, h: 111 },
+      groups: [[0,110,[[129,255]]]]
+    },
+    redShorts: {
+      bounds: { x: 1, y: 0, w: 126, h: 76 },
+      groups: [[0,52,[[1,127]]],[53,75,[[1,63],[65,127]]]]
+    },
+    greenShorts: {
+      bounds: { x: 129, y: 0, w: 126, h: 76 },
+      groups: [[0,52,[[129,255]]],[53,75,[[129,191],[193,255]]]]
+    },
+    redLongBottom: {
+      bounds: { x: 1, y: 0, w: 126, h: 149 },
+      groups: [[0,49,[[1,127]]],[50,148,[[1,63],[65,127]]]]
+    },
+    greenLongBottom: {
+      bounds: { x: 129, y: 0, w: 126, h: 149 },
+      groups: [[0,49,[[129,255]]],[50,148,[[129,191],[193,255]]]]
+    },
+    redBaseballCap: {
+      bounds: { x: 4, y: 16, w: 120, h: 92 },
+      groups: [[16,16,[[61,67]]],[17,17,[[58,70]]],[18,18,[[56,72]]],[19,19,[[54,74]]],[20,20,[[52,76]]],[21,21,[[50,78]]],[22,22,[[48,80]]],[23,23,[[46,82]]],[24,24,[[44,84]]],[25,25,[[42,86]]],[26,26,[[40,88]]],[27,27,[[39,89]]],[28,28,[[37,91]]],[29,29,[[36,92]]],[30,30,[[34,94]]],[31,31,[[33,95]]],[32,32,[[31,97]]],[33,33,[[30,98]]],[34,34,[[29,99]]],[35,35,[[28,100]]],[36,36,[[27,101]]],[37,37,[[26,102]]],[38,38,[[25,103]]],[39,39,[[24,104]]],[40,40,[[23,105]]],[41,41,[[22,106]]],[42,42,[[21,107]]],[43,43,[[20,108]]],[44,44,[[19,109]]],[45,46,[[18,110]]],[47,47,[[17,111]]],[48,48,[[16,112]]],[49,49,[[15,113]]],[50,51,[[14,114]]],[52,52,[[13,115]]],[53,54,[[12,116]]],[55,56,[[11,117]]],[57,58,[[10,118]]],[59,60,[[9,119]]],[61,63,[[8,120]]],[64,66,[[7,121]]],[67,69,[[6,122]]],[70,73,[[5,123]]],[74,107,[[4,124]]]]
+    },
+    greenBaseballCap: {
+      bounds: { x: 129, y: 41, w: 126, h: 54 },
+      groups: [[41,42,[[129,134],[250,255]]],[43,43,[[129,135],[249,255]]],[44,44,[[129,136],[248,255]]],[45,45,[[130,137],[247,254]]],[46,46,[[130,138],[246,254]]],[47,47,[[130,139],[245,254]]],[48,48,[[130,140],[244,254]]],[49,49,[[131,141],[243,253]]],[50,50,[[131,143],[241,253]]],[51,51,[[131,145],[239,253]]],[52,52,[[131,147],[237,253]]],[53,53,[[132,149],[235,252]]],[54,54,[[132,151],[233,252]]],[55,55,[[132,153],[231,252]]],[56,56,[[132,156],[228,252]]],[57,57,[[133,159],[225,251]]],[58,58,[[133,162],[222,251]]],[59,59,[[133,165],[219,251]]],[60,60,[[134,169],[215,250]]],[61,61,[[134,175],[209,250]]],[62,62,[[134,183],[201,250]]],[63,65,[[135,249]]],[66,68,[[136,248]]],[69,71,[[137,247]]],[72,73,[[138,246]]],[74,75,[[139,245]]],[76,77,[[140,244]]],[78,78,[[141,243]]],[79,80,[[142,242]]],[81,81,[[143,241]]],[82,82,[[144,240]]],[83,83,[[145,239]]],[84,84,[[147,237]]],[85,85,[[148,236]]],[86,86,[[149,235]]],[87,87,[[151,233]]],[88,88,[[152,232]]],[89,89,[[154,230]]],[90,90,[[156,228]]],[91,91,[[159,225]]],[92,92,[[163,221]]],[93,93,[[168,216]]],[94,94,[[177,207]]]]
+    },
+    blueBaseballCap: {
+      bounds: { x: 1, y: 123, w: 126, h: 119 },
+      groups: [[123,123,[[63,65]]],[124,124,[[61,67]]],[125,125,[[59,69]]],[126,126,[[57,71]]],[127,127,[[55,73]]],[128,128,[[53,75]]],[129,129,[[51,77]]],[130,130,[[49,79]]],[131,131,[[48,80]]],[132,132,[[46,82]]],[133,133,[[44,84]]],[134,134,[[43,85]]],[135,135,[[41,87]]],[136,136,[[40,88]]],[137,137,[[38,90]]],[138,138,[[37,91]]],[139,139,[[36,92]]],[140,140,[[35,93]]],[141,141,[[33,95]]],[142,142,[[32,96]]],[143,143,[[31,97]]],[144,144,[[30,98]]],[145,145,[[29,99]]],[146,146,[[28,100]]],[147,147,[[27,101]]],[148,148,[[26,102]]],[149,149,[[25,103]]],[150,150,[[24,104]]],[151,151,[[23,105]]],[152,152,[[22,106]]],[153,153,[[21,107]]],[154,155,[[20,108]]],[156,156,[[19,109]]],[157,157,[[18,110]]],[158,158,[[17,111]]],[159,160,[[16,112]]],[161,162,[[15,113]]],[163,163,[[14,114]]],[164,165,[[13,115]]],[166,167,[[12,116]]],[168,169,[[11,117]]],[170,171,[[10,118]]],[172,173,[[9,119]]],[174,175,[[8,120]]],[176,177,[[7,121]]],[178,180,[[6,122]]],[181,182,[[5,123]]],[183,186,[[4,124]]],[187,190,[[3,125]]],[191,195,[[2,126]]],[196,241,[[1,127]]]]
+    },
+    purpleBaseballCap: {
+      bounds: { x: 129, y: 123, w: 126, h: 119 },
+      groups: [[123,123,[[191,193]]],[124,124,[[189,195]]],[125,125,[[187,197]]],[126,126,[[185,199]]],[127,127,[[183,201]]],[128,128,[[181,203]]],[129,129,[[179,205]]],[130,130,[[177,207]]],[131,131,[[176,208]]],[132,132,[[174,210]]],[133,133,[[172,212]]],[134,134,[[171,213]]],[135,135,[[169,215]]],[136,136,[[168,216]]],[137,137,[[166,218]]],[138,138,[[165,219]]],[139,139,[[164,220]]],[140,140,[[163,221]]],[141,141,[[161,223]]],[142,142,[[160,224]]],[143,143,[[159,225]]],[144,144,[[158,226]]],[145,145,[[157,227]]],[146,146,[[156,228]]],[147,147,[[155,229]]],[148,148,[[154,230]]],[149,149,[[153,231]]],[150,150,[[152,232]]],[151,151,[[151,233]]],[152,152,[[150,234]]],[153,153,[[149,235]]],[154,155,[[148,236]]],[156,156,[[147,237]]],[157,157,[[146,238]]],[158,158,[[145,239]]],[159,160,[[144,240]]],[161,162,[[143,241]]],[163,163,[[142,242]]],[164,165,[[141,243]]],[166,167,[[140,244]]],[168,169,[[139,245]]],[170,171,[[138,246]]],[172,173,[[137,247]]],[174,175,[[136,248]]],[176,177,[[135,249]]],[178,180,[[134,250]]],[181,182,[[133,251]]],[183,186,[[132,252]]],[187,190,[[131,253]]],[191,195,[[130,254]]],[196,241,[[129,255]]]]
+    },
+    redKnitCap: {
+      bounds: { x: 36, y: 1, w: 184, h: 127 },
+      groups: [[1,1,[[118,138]]],[2,2,[[111,145]]],[3,3,[[105,151]]],[4,4,[[102,154]]],[5,5,[[99,157]]],[6,6,[[96,160]]],[7,7,[[94,162]]],[8,8,[[92,164]]],[9,9,[[89,167]]],[10,10,[[87,169]]],[11,11,[[85,171]]],[12,12,[[83,173]]],[13,13,[[81,175]]],[14,14,[[79,177]]],[15,15,[[78,178]]],[16,16,[[76,180]]],[17,17,[[75,181]]],[18,18,[[73,183]]],[19,19,[[72,184]]],[20,20,[[70,186]]],[21,21,[[69,187]]],[22,22,[[68,188]]],[23,23,[[66,190]]],[24,24,[[65,191]]],[25,25,[[63,193]]],[26,26,[[62,194]]],[27,27,[[61,195]]],[28,28,[[60,196]]],[29,29,[[59,197]]],[30,30,[[58,198]]],[31,31,[[57,199]]],[32,32,[[56,200]]],[33,34,[[55,201]]],[35,35,[[54,202]]],[36,36,[[53,203]]],[37,37,[[52,204]]],[38,39,[[51,205]]],[40,40,[[50,206]]],[41,41,[[49,207]]],[42,43,[[48,208]]],[44,44,[[47,209]]],[45,46,[[46,210]]],[47,48,[[45,211]]],[49,50,[[44,212]]],[51,52,[[43,213]]],[53,55,[[42,214]]],[56,58,[[41,215]]],[59,61,[[40,216]]],[62,64,[[39,217]]],[65,68,[[38,218]]],[69,75,[[37,219]]],[76,127,[[36,220]]]]
+    },
+    greenKnitCap: {
+      bounds: { x: 36, y: 129, w: 184, h: 127 },
+      groups: [[129,129,[[118,138]]],[130,130,[[111,145]]],[131,131,[[105,151]]],[132,132,[[102,154]]],[133,133,[[99,157]]],[134,134,[[96,160]]],[135,135,[[93,163]]],[136,136,[[91,165]]],[137,137,[[89,167]]],[138,138,[[87,169]]],[139,139,[[85,171]]],[140,140,[[83,173]]],[141,141,[[81,175]]],[142,142,[[79,177]]],[143,143,[[77,179]]],[144,144,[[75,181]]],[145,145,[[74,182]]],[146,146,[[73,183]]],[147,147,[[71,185]]],[148,148,[[70,186]]],[149,149,[[68,188]]],[150,150,[[67,189]]],[151,151,[[66,190]]],[152,152,[[65,191]]],[153,153,[[63,193]]],[154,154,[[62,194]]],[155,155,[[61,195]]],[156,156,[[60,196]]],[157,157,[[59,197]]],[158,158,[[58,198]]],[159,159,[[57,199]]],[160,160,[[56,200]]],[161,161,[[55,201]]],[162,163,[[54,202]]],[164,164,[[53,203]]],[165,165,[[52,204]]],[166,167,[[51,205]]],[168,168,[[50,206]]],[169,169,[[49,207]]],[170,170,[[48,208]]],[171,172,[[47,209]]],[173,173,[[46,210]]],[174,175,[[45,211]]],[176,177,[[44,212]]],[178,179,[[43,213]]],[180,181,[[42,214]]],[182,184,[[41,215]]],[185,187,[[40,216]]],[188,190,[[39,217]]],[191,194,[[38,218]]],[195,202,[[37,219]]],[203,255,[[36,220]]]]
+    },
+    redTopHat: {
+      bounds: { x: 97, y: 43, w: 62, h: 71 },
+      groups: [[43,43,[[122,134]]],[44,44,[[119,137]]],[45,45,[[116,140]]],[46,46,[[114,142]]],[47,47,[[113,143]]],[48,48,[[111,145]]],[49,49,[[110,146]]],[50,50,[[108,148]]],[51,51,[[107,149]]],[52,52,[[106,150]]],[53,54,[[105,151]]],[55,55,[[104,152]]],[56,56,[[103,153]]],[57,58,[[102,154]]],[59,60,[[101,155]]],[61,62,[[100,156]]],[63,65,[[99,157]]],[66,69,[[98,158]]],[70,85,[[97,159]]],[86,89,[[98,158]]],[90,92,[[99,157]]],[93,94,[[100,156]]],[95,96,[[101,155]]],[97,98,[[102,154]]],[99,99,[[103,153]]],[100,100,[[104,152]]],[101,102,[[105,151]]],[103,103,[[106,150]]],[104,104,[[107,149]]],[105,105,[[108,148]]],[106,106,[[109,147]]],[107,107,[[110,146]]],[108,108,[[112,144]]],[109,109,[[113,143]]],[110,110,[[115,141]]],[111,111,[[117,139]]],[112,112,[[120,136]]],[113,113,[[124,132]]]]
+    },
+    greenTopHat: {
+      bounds: { x: 0, y: 148, w: 256, h: 39 },
+      groups: [[148,186,[[0,256]]]]
+    },
+    blueTopHat: {
+      bounds: { x: 0, y: 200, w: 256, h: 18 },
+      groups: [[200,217,[[0,256]]]]
+    },
+    blue: {
+      bounds: { x: 1, y: 194, w: 126, h: 62 },
+      groups: [[194,255,[[1,127]]]]
+    },
+    purple: {
+      bounds: { x: 129, y: 194, w: 126, h: 62 },
+      groups: [[194,255,[[129,255]]]]
+    },
+    blueLong: {
+      bounds: { x: 9, y: 149, w: 110, h: 107 },
+      groups: [[149,255,[[9,119]]]]
+    },
+    purpleLong: {
+      bounds: { x: 137, y: 149, w: 110, h: 107 },
+      groups: [[149,255,[[137,247]]]]
+    },
+    full: {
+      bounds: { x: 0, y: 0, w: 256, h: 256 },
+      groups: [[0,255,[[0,256]]]]
+    }
+  };
+
+  const toolTitle = document.getElementById('toolTitle');
+  const subtitle = document.querySelector('.subtitle');
+  const editPanelHint = document.getElementById('editPanelHint');
+  const editCanvas = document.getElementById('editCanvas');
+  const editCtx = editCanvas.getContext('2d');
+  const editWrapper = document.getElementById('editWrapper');
+  const editCheckerboard = document.getElementById('editCheckerboard');
+  const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+  const bookGroup = document.getElementById('bookGroup');
+  const controlGrid = document.querySelector('.control-grid');
+  const bookGroupTitle = document.getElementById('bookGroupTitle');
+  const bookActiveHint = document.getElementById('bookActiveHint');
+  const bookColorStack = document.getElementById('bookColorStack');
+  const bottomHintText = document.getElementById('bottomHintText');
+  const zoomSlider = document.getElementById('zoomSlider');
+  const zoomDisplay = document.getElementById('zoomDisplay');
+  const fileInput = document.getElementById('fileInput');
+  const toast = document.getElementById('toast');
+  const categorySwitch = document.getElementById('categorySwitch');
+  const styleSwitch = document.getElementById('styleSwitch');
+
+  const filterInputs = {
+    brightness: document.getElementById('slBrightness'),
+    contrast: document.getElementById('slContrast'),
+    saturation: document.getElementById('slSaturation')
+  };
+  const filterValues = {
+    brightness: document.getElementById('valBrightness'),
+    contrast: document.getElementById('valContrast'),
+    saturation: document.getElementById('valSaturation')
+  };
+  const colorFields = {
+    red: document.getElementById('colorFieldRed'),
+    green: document.getElementById('colorFieldGreen'),
+    blue: document.getElementById('colorFieldBlue'),
+    purple: document.getElementById('colorFieldPurple')
+  };
+  const colorLabels = {
+    red: document.getElementById('labelRed'),
+    green: document.getElementById('labelGreen'),
+    blue: document.getElementById('labelBlue'),
+    purple: document.getElementById('labelPurple')
+  };
+  const colorInputs = {
+    red: document.getElementById('bookRedColor'),
+    green: document.getElementById('bookGreenColor'),
+    blue: document.getElementById('bookBlueColor'),
+    purple: document.getElementById('bookPurpleColor')
+  };
+
+  function makeState() {
+    return { image: null, hasImage: false, scale: 1, tx: 0, ty: 0, fitScale: 1, fillScale: 1 };
+  }
+
+  const allRegionKeys = ['red', 'green', 'blue', 'purple', 'full'];
+  const modeIds = Object.keys(MODE_CONFIGS);
+  const statesByMode = {};
+  const modeColors = {};
+  modeIds.forEach(modeId => {
+    statesByMode[modeId] = {};
+    modeColors[modeId] = {};
+    allRegionKeys.forEach(regionKey => {
+      statesByMode[modeId][regionKey] = makeState();
+      modeColors[modeId][regionKey] = DEFAULT_COLORS[regionKey];
+    });
+  });
+
+  const masks = {};
+  const workCanvas = document.createElement('canvas');
+  workCanvas.width = CANVAS_SIZE;
+  workCanvas.height = CANVAS_SIZE;
+  const workCtx = workCanvas.getContext('2d');
+  Object.keys(REGION_DEFS).forEach(regionKey => {
+    const mask = document.createElement('canvas');
+    mask.width = CANVAS_SIZE;
+    mask.height = CANVAS_SIZE;
+    const ctx = mask.getContext('2d');
+    ctx.fillStyle = '#000';
+    REGION_DEFS[regionKey].groups.forEach(([y0, y1, segments]) => {
+      segments.forEach(([x0, x1]) => ctx.fillRect(x0, y0, x1 - x0, y1 - y0 + 1));
+    });
+    masks[regionKey] = mask;
+  });
+
+  let currentCategory = 'tops';
+  const selectedStyleByCategory = {
+    tops: 'longSleeveTop',
+    skirts: 'sleevelessDress',
+    bottoms: 'shortSkirt',
+    hats: 'baseballCap'
+  };
+  let currentMode = selectedStyleByCategory[currentCategory];
+  let activeRegion = 'red';
+  let pendingImportRegion = null;
+  let isDragging = false;
+  let dragRegion = null;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragStartTx = 0;
+  let dragStartTy = 0;
+  let filterBrightness = 100;
+  let filterContrast = 100;
+  let filterSaturation = 100;
+  let toastTimer = null;
+
+  function cfg() { return MODE_CONFIGS[currentMode]; }
+  function currentRegionKeys() { return cfg().regionKeys; }
+  function getActiveLabel(regionKey = activeRegion) { return cfg().activeLabels[regionKey] || regionKey; }
+  function getActiveState() { return statesByMode[currentMode][activeRegion]; }
+  function getActiveArea() { return getRegionDef(activeRegion).bounds; }
+  function getFilterString() { return `brightness(${filterBrightness}%) contrast(${filterContrast}%) saturate(${filterSaturation}%)`; }
+  function currentFullName() { return `${CATEGORY_CONFIGS[cfg().category].label}-${cfg().itemName}`; }
+  function getRegionDefKey(regionKey) {
+    if (currentMode === 'longSleeveTop') {
+      if (regionKey === 'blue') return 'blueLong';
+      if (regionKey === 'purple') return 'purpleLong';
+    }
+    if (currentMode === 'sleevelessDress') {
+      if (regionKey === 'red') return 'redDress';
+      if (regionKey === 'green') return 'greenDress';
+    }
+    if (currentMode === 'shortSleeveDress') {
+      if (regionKey === 'red') return 'redShortDress';
+      if (regionKey === 'green') return 'greenShortDress';
+      if (regionKey === 'blue') return 'blueShortDress';
+      if (regionKey === 'purple') return 'purpleShortDress';
+    }
+    if (currentMode === 'longSleeveDress') {
+      if (regionKey === 'red') return 'redLongDress';
+      if (regionKey === 'green') return 'greenLongDress';
+      if (regionKey === 'blue') return 'blueLongDress';
+      if (regionKey === 'purple') return 'purpleLongDress';
+    }
+    if (currentMode === 'robe') {
+      if (regionKey === 'red') return 'redRobe';
+      if (regionKey === 'green') return 'greenRobe';
+      if (regionKey === 'blue') return 'blueRobe';
+      if (regionKey === 'purple') return 'purpleRobe';
+    }
+    if (currentMode === 'gown') {
+      if (regionKey === 'red') return 'redGown';
+      if (regionKey === 'green') return 'greenGown';
+      if (regionKey === 'blue') return 'blueGown';
+      if (regionKey === 'purple') return 'purpleGown';
+    }
+    if (currentMode === 'shortSkirt') {
+      if (regionKey === 'red') return 'redShortSkirt';
+      if (regionKey === 'green') return 'greenShortSkirt';
+    }
+    if (currentMode === 'longSkirt') {
+      if (regionKey === 'red') return 'redLongSkirt';
+      if (regionKey === 'green') return 'greenLongSkirt';
+    }
+    if (currentMode === 'shorts') {
+      if (regionKey === 'red') return 'redShorts';
+      if (regionKey === 'green') return 'greenShorts';
+    }
+    if (currentMode === 'longBottom') {
+      if (regionKey === 'red') return 'redLongBottom';
+      if (regionKey === 'green') return 'greenLongBottom';
+    }
+    if (currentMode === 'baseballCap') {
+      if (regionKey === 'red') return 'redBaseballCap';
+      if (regionKey === 'green') return 'greenBaseballCap';
+      if (regionKey === 'blue') return 'blueBaseballCap';
+      if (regionKey === 'purple') return 'purpleBaseballCap';
+    }
+    if (currentMode === 'knitCap') {
+      if (regionKey === 'red') return 'redKnitCap';
+      if (regionKey === 'green') return 'greenKnitCap';
+    }
+    if (currentMode === 'topHat') {
+      if (regionKey === 'red') return 'redTopHat';
+      if (regionKey === 'green') return 'greenTopHat';
+      if (regionKey === 'blue') return 'blueTopHat';
+    }
+    return regionKey;
+  }
+  function getRegionDef(regionKey) { return REGION_DEFS[getRegionDefKey(regionKey)]; }
+
+  function showToast(message) {
+    clearTimeout(toastTimer);
+    toast.textContent = message;
+    toast.classList.add('show');
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  function pointInRegion(x, y, regionKey) {
+    const px = Math.floor(x);
+    const py = Math.floor(y);
+    if (px < 0 || py < 0 || px >= CANVAS_SIZE || py >= CANVAS_SIZE) return false;
+    for (const [y0, y1, segments] of getRegionDef(regionKey).groups) {
+      if (py < y0 || py > y1) continue;
+      return segments.some(([x0, x1]) => px >= x0 && px < x1);
+    }
+    return false;
+  }
+
+  function regionAt(x, y) {
+    for (const regionKey of currentRegionKeys()) {
+      if (pointInRegion(x, y, regionKey)) return regionKey;
+    }
+    return null;
+  }
+
+  function fitScale(img, area) { return Math.min(area.w / img.naturalWidth, area.h / img.naturalHeight); }
+  function fillScale(img, area) { return Math.max(area.w / img.naturalWidth, area.h / img.naturalHeight); }
+
+  function setStateImage(state, img, area) {
+    state.image = img;
+    state.hasImage = true;
+    state.fitScale = fitScale(img, area);
+    state.fillScale = fillScale(img, area);
+    state.scale = state.fitScale;
+    state.tx = area.x + (area.w - img.naturalWidth * state.scale) / 2;
+    state.ty = area.y + (area.h - img.naturalHeight * state.scale) / 2;
+    clampState(state, area);
+  }
+
+  function clampState(state, area) {
+    if (!state.image || !state.hasImage) return;
+    const drawW = state.image.naturalWidth * state.scale;
+    const drawH = state.image.naturalHeight * state.scale;
+    const margin = 0.1;
+    if (drawW > area.w * 0.3 && drawH > area.h * 0.3) {
+      state.tx = Math.max(area.x - drawW * (1 - margin), Math.min(area.x + area.w - drawW * margin, state.tx));
+      state.ty = Math.max(area.y - drawH * (1 - margin), Math.min(area.y + area.h - drawH * margin, state.ty));
+    }
+  }
+
+  function drawMaskedFill(ctx, regionKey) {
+    if (cfg().useBaseFill === false) return;
+    workCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    workCtx.globalCompositeOperation = 'source-over';
+    workCtx.fillStyle = modeColors[currentMode][regionKey];
+    workCtx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    workCtx.globalCompositeOperation = 'destination-in';
+    workCtx.drawImage(masks[getRegionDefKey(regionKey)], 0, 0);
+    workCtx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(workCanvas, 0, 0);
+  }
+
+  function drawMaskedImage(ctx, regionKey, state, applyFilter) {
+    if (!state.image || !state.hasImage) return;
+    workCtx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    workCtx.globalCompositeOperation = 'source-over';
+    workCtx.imageSmoothingEnabled = true;
+    workCtx.imageSmoothingQuality = 'high';
+    workCtx.filter = applyFilter ? getFilterString() : 'none';
+    workCtx.drawImage(state.image, state.tx, state.ty, state.image.naturalWidth * state.scale, state.image.naturalHeight * state.scale);
+    workCtx.filter = 'none';
+    workCtx.globalCompositeOperation = 'destination-in';
+    workCtx.drawImage(masks[getRegionDefKey(regionKey)], 0, 0);
+    workCtx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(workCanvas, 0, 0);
+  }
+
+  function drawOverlays(ctx) {
+    currentRegionKeys().forEach(regionKey => {
+      const bounds = getRegionDef(regionKey).bounds;
+      ctx.save();
+      ctx.strokeStyle = regionKey === activeRegion ? 'rgba(76,110,245,.9)' : 'rgba(30,36,51,.18)';
+      ctx.lineWidth = regionKey === activeRegion ? 1.5 : 1;
+      ctx.setLineDash(regionKey === activeRegion ? [5, 3] : [3, 4]);
+      ctx.strokeRect(bounds.x + 0.5, bounds.y + 0.5, bounds.w - 1, bounds.h - 1);
+      ctx.restore();
+    });
+  }
+
+  function renderToContext(ctx, applyFilter = true, showOverlay = true) {
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    currentRegionKeys().forEach(regionKey => drawMaskedFill(ctx, regionKey));
+    currentRegionKeys().forEach(regionKey => drawMaskedImage(ctx, regionKey, statesByMode[currentMode][regionKey], applyFilter));
+    if (showOverlay) drawOverlays(ctx);
+  }
+
+  function ensureActiveRegionValid() {
+    if (!currentRegionKeys().includes(activeRegion)) {
+      activeRegion = currentRegionKeys()[0];
+    }
+  }
+
+  function renderCategorySwitch() {
+    categorySwitch.innerHTML = '';
+    Object.entries(CATEGORY_CONFIGS).forEach(([categoryKey, category]) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `switch-option${currentCategory === categoryKey ? ' active' : ''}`;
+      button.textContent = category.label;
+      button.addEventListener('click', () => {
+        if (categoryKey === currentCategory) return;
+        currentCategory = categoryKey;
+        currentMode = selectedStyleByCategory[categoryKey] || category.styles[0];
+        ensureActiveRegionValid();
+        updateAll();
+        showToast(`已切换到${CATEGORY_CONFIGS[currentCategory].label}`);
+      });
+      categorySwitch.appendChild(button);
+    });
+  }
+
+  function renderStyleSwitch() {
+    styleSwitch.innerHTML = '';
+    CATEGORY_CONFIGS[currentCategory].styles.forEach(modeId => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `switch-option${currentMode === modeId ? ' active' : ''}`;
+      button.textContent = MODE_CONFIGS[modeId].itemName;
+      button.addEventListener('click', () => {
+        if (modeId === currentMode) return;
+        currentMode = modeId;
+        selectedStyleByCategory[currentCategory] = modeId;
+        ensureActiveRegionValid();
+        updateAll();
+        showToast(`已切换为${currentFullName()}`);
+      });
+      styleSwitch.appendChild(button);
+    });
+  }
+
+  function updateUI() {
+    ensureActiveRegionValid();
+    renderCategorySwitch();
+    renderStyleSwitch();
+    document.title = '服装图片生成工具 · 256×256 PNG';
+    toolTitle.textContent = '《朋友收集梦想生活》服装图片生成工具';
+    if (subtitle) subtitle.textContent = '点击不同区域导入图片 → 调整显示区域 → 导出 256×256 PNG';
+    editPanelHint.textContent = cfg().editHint;
+    bottomHintText.textContent = cfg().bottomHint;
+    const hideColorPanel = !!cfg().hideColorPanel;
+    bookGroup.style.display = hideColorPanel ? 'none' : '';
+    controlGrid.classList.toggle('simple-tee-mode', hideColorPanel);
+    bookGroupTitle.textContent = cfg().colorPanelTitle;
+    bookActiveHint.textContent = `当前编辑：${getActiveLabel()}`;
+    bookColorStack.classList.toggle('short-sleeve', !hideColorPanel && currentRegionKeys().length > 2 && currentMode !== 'topHat');
+    bookColorStack.classList.toggle('top-hat-vertical', !hideColorPanel && currentMode === 'topHat');
+    Object.keys(colorInputs).forEach(regionKey => {
+      const isVisible = !hideColorPanel && currentRegionKeys().includes(regionKey);
+      colorFields[regionKey].style.display = isVisible ? 'flex' : 'none';
+      colorLabels[regionKey].textContent = cfg().colorLabels[regionKey] || regionKey;
+      colorInputs[regionKey].value = modeColors[currentMode][regionKey];
+    });
+    const state = getActiveState();
+    const zoomPct = Math.round((state.hasImage ? state.scale : 1) * 100);
+    zoomDisplay.textContent = `${zoomPct}%`;
+    zoomSlider.value = zoomPct;
+    noImagePlaceholder.style.display = 'none';
+    editWrapper.classList.toggle('draggable', !!state.hasImage);
+  }
+
+  function updateAll() {
+    updateUI();
+    renderToContext(editCtx, true, true);
+  }
+
+  function openImporter(regionKey = null) {
+    pendingImportRegion = regionKey || activeRegion;
+    fileInput.click();
+  }
+
+  function loadFileInto(file, regionKey = null) {
+    if (!file || !file.type.match(/image\//)) {
+      showToast('请选择图片文件');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = event => {
+      const img = new Image();
+      img.onload = () => {
+        const targetRegion = regionKey || pendingImportRegion || activeRegion;
+        activeRegion = targetRegion;
+        setStateImage(statesByMode[currentMode][targetRegion], img, getRegionDef(targetRegion).bounds);
+        pendingImportRegion = null;
+        updateAll();
+        showToast(`图片已导入到${getActiveLabel(targetRegion)}`);
+      };
+      img.onerror = () => showToast('图片加载失败');
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function getCanvasPos(event) {
+    const rect = editCanvas.getBoundingClientRect();
+    return {
+      x: (event.clientX - rect.left) * CANVAS_SIZE / rect.width,
+      y: (event.clientY - rect.top) * CANVAS_SIZE / rect.height
+    };
+  }
+
+  editCanvas.addEventListener('mousemove', event => {
+    if (isDragging) return;
+    const pos = getCanvasPos(event);
+    const regionKey = regionAt(pos.x, pos.y);
+    editWrapper.style.cursor = (regionKey && statesByMode[currentMode][regionKey].hasImage) ? 'grab' : 'default';
+  });
+
+  editCanvas.addEventListener('mousedown', event => {
+    if (event.button !== 0) return;
+    const pos = getCanvasPos(event);
+    const regionKey = regionAt(pos.x, pos.y);
+    if (!regionKey) return;
+    if (regionKey !== activeRegion) {
+      activeRegion = regionKey;
+      updateAll();
+      showToast(`当前编辑：${getActiveLabel(regionKey)}`);
+      return;
+    }
+    const state = statesByMode[currentMode][regionKey];
+    if (!state.hasImage) {
+      openImporter(regionKey);
+      return;
+    }
+    event.preventDefault();
+    isDragging = true;
+    dragRegion = regionKey;
+    dragStartX = pos.x;
+    dragStartY = pos.y;
+    dragStartTx = state.tx;
+    dragStartTy = state.ty;
+    editWrapper.classList.add('dragging');
+    editCheckerboard.classList.add('dragging');
+    document.body.style.cursor = 'grabbing';
+  });
+
+  document.addEventListener('mousemove', event => {
+    if (!isDragging || !dragRegion) return;
+    const pos = getCanvasPos(event);
+    const state = statesByMode[currentMode][dragRegion];
+    const area = getRegionDef(dragRegion).bounds;
+    state.tx = dragStartTx + (pos.x - dragStartX);
+    state.ty = dragStartTy + (pos.y - dragStartY);
+    clampState(state, area);
+    updateAll();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    dragRegion = null;
+    editWrapper.classList.remove('dragging');
+    editCheckerboard.classList.remove('dragging');
+    document.body.style.cursor = '';
+  });
+
+  editCanvas.addEventListener('wheel', event => {
+    const state = getActiveState();
+    if (!state.hasImage) return;
+    const pos = getCanvasPos(event);
+    if (!pointInRegion(pos.x, pos.y, activeRegion)) return;
+    event.preventDefault();
+    const oldScale = state.scale;
+    const factor = (-event.deltaY > 0) ? 1.08 : 1 / 1.08;
+    state.scale = Math.max(0.05, Math.min(20, state.scale * factor));
+    const ix = (pos.x - state.tx) / oldScale;
+    const iy = (pos.y - state.ty) / oldScale;
+    state.tx = pos.x - ix * state.scale;
+    state.ty = pos.y - iy * state.scale;
+    clampState(state, getActiveArea());
+    updateAll();
+  }, { passive: false });
+
+  function moveBy(dx, dy) {
+    const state = getActiveState();
+    if (!state.hasImage) return;
+    state.tx += dx;
+    state.ty += dy;
+    clampState(state, getActiveArea());
+    updateAll();
+  }
+
+  function bindNudgeButton(id, dx, dy) {
+    const button = document.getElementById(id);
+    let holdTimer = null;
+    let repeatTimer = null;
+    const clearTimers = () => {
+      clearTimeout(holdTimer);
+      clearInterval(repeatTimer);
+      holdTimer = null;
+      repeatTimer = null;
+    };
+    button.addEventListener('pointerdown', event => {
+      if (!getActiveState().hasImage) return;
+      event.preventDefault();
+      const step = event.shiftKey ? 10 : 1;
+      moveBy(dx * step, dy * step);
+      clearTimers();
+      holdTimer = setTimeout(() => {
+        repeatTimer = setInterval(() => moveBy(dx * step, dy * step), 45);
+      }, 260);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(name => button.addEventListener(name, clearTimers));
+  }
+
+  bindNudgeButton('btnGlobalNudgeUp', 0, -1);
+  bindNudgeButton('btnGlobalNudgeDown', 0, 1);
+  bindNudgeButton('btnGlobalNudgeLeft', -1, 0);
+  bindNudgeButton('btnGlobalNudgeRight', 1, 0);
+
+  function updateScale(nextScale) {
+    const state = getActiveState();
+    if (!state.hasImage) return;
+    const area = getActiveArea();
+    const cx = area.x + area.w / 2;
+    const cy = area.y + area.h / 2;
+    const oldScale = state.scale;
+    state.scale = Math.max(0.05, Math.min(20, nextScale));
+    const ix = (cx - state.tx) / oldScale;
+    const iy = (cy - state.ty) / oldScale;
+    state.tx = cx - ix * state.scale;
+    state.ty = cy - iy * state.scale;
+    clampState(state, area);
+    updateAll();
+  }
+
+  zoomSlider.addEventListener('input', () => updateScale(parseInt(zoomSlider.value, 10) / 100));
+  document.getElementById('btnZoomIn').addEventListener('click', () => updateScale(getActiveState().scale + 0.01));
+  document.getElementById('btnZoomOut').addEventListener('click', () => updateScale(getActiveState().scale - 0.01));
+  document.getElementById('btnFit').addEventListener('click', () => {
+    const state = getActiveState();
+    const area = getActiveArea();
+    if (!state.hasImage) return;
+    state.scale = state.fitScale;
+    state.tx = area.x + (area.w - state.image.naturalWidth * state.scale) / 2;
+    state.ty = area.y + (area.h - state.image.naturalHeight * state.scale) / 2;
+    updateAll();
+  });
+  document.getElementById('btnFill').addEventListener('click', () => {
+    const state = getActiveState();
+    const area = getActiveArea();
+    if (!state.hasImage) return;
+    state.scale = state.fillScale;
+    state.tx = area.x + (area.w - state.image.naturalWidth * state.scale) / 2;
+    state.ty = area.y + (area.h - state.image.naturalHeight * state.scale) / 2;
+    updateAll();
+  });
+  document.getElementById('btnActualSize').addEventListener('click', () => updateScale(1));
+  document.getElementById('btnReset').addEventListener('click', () => {
+    const state = getActiveState();
+    const area = getActiveArea();
+    if (!state.hasImage) return;
+    state.tx = area.x + (area.w - state.image.naturalWidth * state.scale) / 2;
+    state.ty = area.y + (area.h - state.image.naturalHeight * state.scale) / 2;
+    clampState(state, area);
+    updateAll();
+  });
+
+  function exportPNG() {
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = CANVAS_SIZE;
+    exportCanvas.height = CANVAS_SIZE;
+    const ctx = exportCanvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    renderToContext(ctx, true, false);
+    exportCanvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${cfg().filePrefix}-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast(`PNG 已导出 (${currentFullName()})`);
+    }, 'image/png');
+  }
+
+  document.getElementById('btnImport').addEventListener('click', () => openImporter());
+  document.getElementById('btnExport').addEventListener('click', exportPNG);
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      loadFileInto(fileInput.files[0], pendingImportRegion);
+      fileInput.value = '';
+    }
+  });
+
+  Object.keys(colorInputs).forEach(regionKey => {
+    colorInputs[regionKey].addEventListener('input', () => {
+      modeColors[currentMode][regionKey] = colorInputs[regionKey].value;
+      updateAll();
+    });
+  });
+
+  function bindFilter(slider, valueEl, setter) {
+    slider.addEventListener('input', () => {
+      setter(parseInt(slider.value, 10));
+      valueEl.textContent = `${slider.value}%`;
+      updateAll();
+    });
+  }
+  bindFilter(filterInputs.brightness, filterValues.brightness, value => filterBrightness = value);
+  bindFilter(filterInputs.contrast, filterValues.contrast, value => filterContrast = value);
+  bindFilter(filterInputs.saturation, filterValues.saturation, value => filterSaturation = value);
+  document.querySelectorAll('.filter-step[data-target]').forEach(button => {
+    button.addEventListener('click', () => {
+      const slider = document.getElementById(button.dataset.target);
+      const valueEl = document.getElementById(button.dataset.val);
+      const delta = parseInt(button.dataset.delta, 10);
+      const nextValue = Math.max(parseInt(slider.min, 10), Math.min(parseInt(slider.max, 10), parseInt(slider.value, 10) + delta));
+      slider.value = nextValue;
+      valueEl.textContent = `${nextValue}%`;
+      if (slider === filterInputs.brightness) filterBrightness = nextValue;
+      if (slider === filterInputs.contrast) filterContrast = nextValue;
+      if (slider === filterInputs.saturation) filterSaturation = nextValue;
+      updateAll();
+    });
+  });
+
+  document.addEventListener('keydown', event => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+      event.preventDefault();
+      exportPNG();
+    }
+  });
+
+  updateAll();
+})();
+</script>
+</body>
+</html>
