@@ -81,6 +81,7 @@ def ask_image_type():
             print('1. 面部彩绘 (UgcFacePaint)')
             print('2. 食物 (UgcFood)')
             print('3. 宝物 (UgcGoods)')
+            print('4. 服装 (UgcCloth)')
             choice = int(input('请选择 (Select an option)：'))
             if choice == 1:
                 return 'UgcFacePaint'
@@ -88,8 +89,10 @@ def ask_image_type():
                 return 'UgcFood'
             elif choice == 3:
                 return 'UgcGoods'
+            elif choice == 4:
+                return 'UgcCloth'
             else:
-                print('请输入 1、2 或 3 (Please enter 1, 2, or 3)。')
+                print('请输入 1、2、3 或 4 (Please enter 1, 2, 3, or 4)。')
         except ValueError:
             print('请输入数字 (Please input a number)。')
 
